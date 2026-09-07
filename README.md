@@ -4,13 +4,21 @@
 
 ## 状態
 
-| 建物 | このリポジトリ | ページ数 | 現行のGoogleサイト（**運用中・触らない**） |
+| 建物 | 公開URL（**QRの貼り先**） | ページ数 | 現行のGoogleサイト（**運用中・触らない**） |
 |---|---|---|---|
-| ホームファミーユ豊玉Ⅲ | `famille3/` | ホーム＋5 | https://sites.google.com/view/famille32025 |
-| ホームファミーユ豊玉Ⅱ | `famille2/` | ホーム＋4 | https://sites.google.com/view/famille22025 |
-| ラヴィール豊玉 | `laville/` | ホーム＋4 | https://sites.google.com/view/laville2025 |
+| ホームファミーユ豊玉Ⅲ | https://kabufamille.github.io/sumai-shiori/famille3/ | ホーム＋5 | https://sites.google.com/view/famille32025 |
+| ホームファミーユ豊玉Ⅱ | https://kabufamille.github.io/sumai-shiori/famille2/ | ホーム＋4 | https://sites.google.com/view/famille22025 |
+| ラヴィール豊玉 | https://kabufamille.github.io/sumai-shiori/laville/ | ホーム＋4 | https://sites.google.com/view/laville2025 |
 
-いずれも2026-09-07に現行サイトから中身を引き写して作成（未公開）。
+2026-09-07 に現行サイトから中身を引き写して作成し、同日公開。
+
+**入口ページ（`/sumai-shiori/`）から各棟へは進めない。** けんじ方針＝「棟ごとのQRからアクセスした時だけ、その棟が開く」。各棟のURLを直接開くか、QRを使う。
+
+**QR画像**：`デスクトップ/住まいのしおりQR_新URL/`（棟ごとに素のPNGと名前つきPNG。誤り訂正レベルH・980px）。**中身は実際にデコードして一致を確認済み。**
+
+### 🔴 検索避けは `noindex` だけが効いている
+
+`robots.txt` はドメインの一番上（`kabufamille.github.io/robots.txt`）しか読まれないので、**このリポジトリの `robots.txt` は検索エンジンには無視される**（2026-09-07に404を実測）。ファイルは残してあるが、実効性があるのは**全ページの `<meta name="robots" content="noindex">`**。ページを増やすときは必ず入れること。
 
 ## 🔴 棟ごとに中身が違う（同じだと思って直さないこと）
 
