@@ -1,0 +1,7 @@
+.github_config
+.DS_Store
+Thumbs.db
+
+# 参考資料（サイトには載せない・GitHubへ上げない）
+# 練馬区の冊子は区の公式ページにあるものなので、こちらで再配布しない
+*.pdf
