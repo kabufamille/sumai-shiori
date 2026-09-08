@@ -86,7 +86,7 @@ CSS = """
   .items .ex{font-size:8pt;line-height:1.7;color:var(--ink);}
 
   /* 写真の帯（左右の余白いっぱいまで届かせる） */
-  .strip{flex:none;margin:3.2mm -7mm 0;height:16mm;overflow:hidden;}
+  .strip{flex:none;margin:3.2mm -7mm 0;height:11mm;overflow:hidden;}
   .strip img{width:100%;height:100%;object-fit:cover;object-position:center 42%;display:block;}
 
   .foot{flex:none;margin-top:auto;padding-top:2.4mm;}
