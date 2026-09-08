@@ -10,14 +10,13 @@ import io, os, re, segno
 SP = r"C:/Users/disc3/AppData/Local/Temp/claude/C--googleDrive-H-/e301efc2-cf73-4b5b-895f-3c19bc4cd557/scratchpad/mock"
 BASE = "https://kabufamille.github.io/sumai-shiori/"
 
-ITEMS_COMMON = ["ゴミの出し方", "共用部分の扱い", "ビン・缶・ペットボトル回収"]
+# 「一例でいい」（けんじ 2026-09-08）＝全部を並べず2行にまとめる。
+# 棟でページ数が違っても文面を分けずに済むよう、末尾は「など」で受ける。
+EXAMPLE = "ゴミの出し方、共用部分の使い方、<br>夜間・休日の緊急連絡先　など"
 BUILDINGS = [
-    dict(slug="famille3", name="ファミーユ豊玉Ⅲ", pos="left:25mm;top:19.1mm",
-         items=ITEMS_COMMON + ["カードキーについて", "夜間・休日緊急連絡先"]),
-    dict(slug="famille2", name="ファミーユ豊玉Ⅱ", pos="left:105mm;top:19.1mm",
-         items=ITEMS_COMMON + ["夜間・休日緊急連絡先"]),
-    dict(slug="laville", name="ラヴィール豊玉", pos="left:25mm;top:148.5mm",
-         items=ITEMS_COMMON + ["夜間・休日緊急連絡先"]),
+    dict(slug="famille3", name="ファミーユ豊玉Ⅲ", pos="left:25mm;top:19.1mm"),
+    dict(slug="famille2", name="ファミーユ豊玉Ⅱ", pos="left:105mm;top:19.1mm"),
+    dict(slug="laville", name="ラヴィール豊玉", pos="left:25mm;top:148.5mm"),
 ]
 
 
@@ -65,12 +64,12 @@ CSS = """
   }
   /* 🔴 flex:none が無いと、高さが足りないとき黙って0まで潰される（2026-09-08に実際に起きた） */
   .bar{flex:none;width:12mm;height:1.2mm;background:var(--brown);border-radius:1mm;margin:0 auto 2.4mm;}
-  h1{flex:none;font-size:15.5pt;letter-spacing:.16em;color:var(--brown-d);font-weight:500;
+  h1{flex:none;font-size:14.5pt;letter-spacing:.16em;color:var(--brown-d);font-weight:500;
      text-indent:.16em;line-height:1.35;white-space:nowrap;}
   .sub{flex:none;font-size:7.5pt;letter-spacing:.13em;color:var(--sub);margin-top:1.4mm;text-indent:.13em;}
 
   .qrbox{
-    flex:none;margin:3mm auto 0;width:37mm;height:37mm;padding:2mm;background:#fff;
+    flex:none;margin:2.6mm auto 0;width:32mm;height:32mm;padding:1.8mm;background:#fff;
     border:.6pt solid var(--line);border-radius:2.6mm;
   }
   .qrbox svg.qr{width:100%;height:100%;display:block;}   /* ベクター＝拡大してもくっきり */
@@ -80,18 +79,15 @@ CSS = """
 
   /* しおりに載っている項目 */
   .items{
-    flex:none;margin:2.6mm 0 0;padding:2.2mm 2.5mm 2.4mm;
+    flex:none;margin:2.4mm 0 0;padding:1.8mm 2.5mm 2mm;
     background:var(--tint);border-radius:2.4mm;
   }
   .items .cap{font-size:6.8pt;letter-spacing:.1em;color:var(--sub);margin-bottom:1.2mm;}
-  .items ul{list-style:none;}
-  .items li{
-    font-size:8.2pt;line-height:1.6;color:var(--ink);
-    display:flex;align-items:center;justify-content:center;gap:1.6mm;
-  }
-  .items li::before{
-    content:"";flex:none;width:1.5mm;height:1.5mm;border-radius:50%;background:var(--brown);
-  }
+  .items .ex{font-size:8pt;line-height:1.7;color:var(--ink);}
+
+  /* 写真の帯（左右の余白いっぱいまで届かせる） */
+  .strip{flex:none;margin:3.2mm -7mm 0;height:16mm;overflow:hidden;}
+  .strip img{width:100%;height:100%;object-fit:cover;object-position:center 42%;display:block;}
 
   .foot{flex:none;margin-top:auto;padding-top:2.4mm;}
   .bldname{
@@ -103,7 +99,6 @@ CSS = """
 
 
 def card(b):
-    lis = "\n".join('        <li>%s</li>' % t for t in b["items"])
     return """  <div class="card" style="%s">
     <div class="bar"></div>
     <h1 class="mincho">住まいのしおり</h1>
@@ -112,16 +107,15 @@ def card(b):
     <p class="scan">スマートフォンのカメラを<b>かざすだけ</b></p>
     <div class="items">
       <p class="cap">こんなことが載っています</p>
-      <ul>
-%s
-      </ul>
+      <p class="ex">%s</p>
     </div>
+    <div class="strip"><img src="room.jpg" alt=""></div>
     <div class="foot">
       <span class="bldname">%s</span>
       <p class="tel">お問い合わせ　邑ハウジング　03-3948-0101</p>
     </div>
   </div>
-""" % (b["pos"], qr_svg(BASE + b["slug"] + "/"), lis, b["name"])
+""" % (b["pos"], qr_svg(BASE + b["slug"] + "/"), EXAMPLE, b["name"])
 
 
 html = """<!DOCTYPE html>
@@ -150,4 +144,4 @@ html = """<!DOCTYPE html>
 io.open(os.path.join(SP, "poster_3tou.html"), "w", encoding="utf-8").write(html)
 print("poster_3tou.html を作成（QRはSVG・項目リストつき）")
 for b in BUILDINGS:
-    print("  %-9s %s … 項目%d件" % (b["slug"], b["name"], len(b["items"])))
+    print("  %-9s %s" % (b["slug"], b["name"]))

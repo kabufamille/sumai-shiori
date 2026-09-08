@@ -159,6 +159,12 @@
     window.addEventListener('scroll', tick, { passive: true });
     btn.addEventListener('click', function (e) {
       e.preventDefault();
+      // 開いている項目はいったん閉じる（戻ったときに最初の状態から見られるように）。
+      // 見えない位置での開閉なのでアニメーションはさせず、その場で閉じる。
+      document.querySelectorAll('details.sec[open]').forEach(function (d) {
+        d.classList.remove('is-expanded');
+        d.open = false;
+      });
       window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
       // なめらかスクロールは描画が止まっている環境では進まない。
       // 少し待ってもまだ上に着いていなければ、その場で先頭へ移す（必ず戻れるように）。
