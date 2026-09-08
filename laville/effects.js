@@ -144,7 +144,30 @@
     window.addEventListener('scroll', tick, { passive: true });
   })();
 
-  /* ---------- 5. ページ内リンクはヘッダーの高さぶん手前で止める ---------- */
+  /* ---------- 5. トップへ戻る ----------
+     素のCSSでは常に見えている。JSは「上のほうにいる間だけ隠す」役だけ。
+     JSが止まれば出っぱなしになるが、押せば先頭へ戻れる（href="#" が効く）。 */
+  (function () {
+    var btn = document.querySelector('.totop');
+    if (!btn) return;
+    var hidden = null;
+    var tick = function () {
+      var should = window.scrollY < 320;      // 最初の1画面ぶんは出さない
+      if (should !== hidden) { btn.classList.toggle('is-hidden', should); hidden = should; }
+    };
+    tick();
+    window.addEventListener('scroll', tick, { passive: true });
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      // なめらかスクロールは描画が止まっている環境では進まない。
+      // 少し待ってもまだ上に着いていなければ、その場で先頭へ移す（必ず戻れるように）。
+      setTimeout(function () { if (window.scrollY > 0) window.scrollTo(0, 0); }, 700);
+      history.replaceState(null, '', location.pathname + location.search);
+    });
+  })();
+
+  /* ---------- 6. ページ内リンクはヘッダーの高さぶん手前で止める ---------- */
   document.querySelectorAll('a[href^="#"]').forEach(function (a) {
     a.addEventListener('click', function (e) {
       var id = a.getAttribute('href');

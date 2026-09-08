@@ -389,6 +389,28 @@ h2:hover .anchor,.anchor:focus{opacity:1;color:var(--accent);}
 .pager .next:hover{transform:translateX(3px);}
 .pager .next{text-align:right;}
 
+/* ---- トップへ戻る ----
+   素の状態は「見えている」。JSがスクロール位置に応じて隠すだけ。
+   JSが止まっても押せる（常に出ているだけで、使えなくならない）。 */
+.totop{
+  position:fixed;right:16px;bottom:16px;z-index:30;
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--accent);color:#fff;text-decoration:none;
+  font-size:14px;font-weight:700;line-height:1;
+  padding:12px 17px;border-radius:999px;
+  box-shadow:0 4px 16px rgba(0,0,0,.22);
+  transition:opacity .25s ease, transform .25s ease, background .2s ease;
+}
+.totop span{font-size:11px;}
+.totop:hover{background:var(--brown-d,#5e4f3f);transform:translateY(-2px);}
+.totop.is-hidden{opacity:0;transform:translateY(12px);pointer-events:none;}
+/* 引き出しメニューが開いている間は邪魔なので隠す */
+body.nav-locked .totop{opacity:0;pointer-events:none;}
+
+@media (min-width:768px){
+  .totop{right:24px;bottom:24px;font-size:15px;padding:13px 20px;}
+}
+
 /* ---- フッター ---- */
 .site-footer{
   background:#efeae3;border-top:1px solid var(--line);
