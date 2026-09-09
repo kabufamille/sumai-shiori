@@ -249,6 +249,21 @@ h2:hover .anchor,.anchor:focus{opacity:1;color:var(--accent);}
 .note p{margin:0;}
 .note strong{color:var(--alert);}
 
+/* ---- とくに目を引かせたいお願い ----
+   ページ内で1つだけ使う想定。note より一段強い（枠線・見出しの帯・背景） */
+.notice-strong{
+  background:var(--card);border:2px solid var(--alert);border-radius:var(--radius);
+  padding:0 0 16px;margin:0 0 20px;overflow:hidden;
+  box-shadow:0 4px 18px rgba(180,72,60,.13);
+}
+.notice-strong .nt{
+  background:var(--alert);color:#fff;margin:0 0 14px;
+  padding:11px 16px;font-size:16px;font-weight:700;line-height:1.5;
+}
+.notice-strong p{margin:0 16px 12px;font-size:16px;line-height:1.9;}
+.notice-strong p.last{margin-bottom:0;}
+.notice-strong strong{color:var(--alert);}
+
 /* ---- しめの一文 ---- */
 .closing{
   text-align:center;color:var(--ink-sub);font-size:16px;
