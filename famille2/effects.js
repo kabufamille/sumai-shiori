@@ -33,12 +33,26 @@
         wrap.addEventListener('transitionend', done);
         setTimeout(done, 420);          // transitionend が来なかったときの保険
       } else {
+        // 同じグループ（同じ親）の中では1つだけ開く。
+        // 4つ5つと開いたままにできると縦にどこまでも伸びて読みにくいため。
+        var before = d.getBoundingClientRect().top;
+        d.parentElement.querySelectorAll(':scope > details.sec[open]').forEach(function (o) {
+          if (o === d) return;
+          o.classList.remove('is-expanded');
+          o.open = false;          // 見えない位置なのでアニメーションはさせない
+        });
+
         // 開く：先に open にして中身を出し、レイアウトを1回確定させてから伸ばす。
         // requestAnimationFrame に頼ると、描画が止まっている状況で開かないことがある
         // （POLのmain.js と同じ「リフローを挟む」書き方に揃えた）。
         d.open = true;
         void wrap.offsetHeight;   /* リフローを強制 */
         d.classList.add('is-expanded');
+
+        // 上にあった項目が閉じたぶん、押した見出しが画面の上へ飛ぶ。
+        // ずれた分だけスクロールを戻して、押した位置に留める。
+        var after = d.getBoundingClientRect().top;
+        if (after !== before) window.scrollBy(0, after - before);
       }
     });
 
