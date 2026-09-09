@@ -1,0 +1,832 @@
+# -*- coding: utf-8 -*-
+"""住まいのしおり 3棟ぶんのページ生成（2026-09-07）
+
+棟ごとに本文が違う。現行Googleサイト3つを実際に読んで差分を取ったもの：
+  ファミーユⅢ … ゴミ出しに「④LEDライト」／共用部分に「ドアノブ注意」「植栽管理」／カードキーのページあり
+  ファミーユⅡ … ゴミ出し①に「ポリバケツに入りきらない大きい袋」／共用部分に「非常用階段の施錠」
+                 「駐輪場扉の施錠（重要）」「階段下ベビーカー置き場」「北側窓格子の拭き掃除」
+                 ／古紙・古布は町会の回収で火曜（区の収集日＝水曜ではない）
+  ラヴィール豊玉 … 共用部分に「ペットに関するご協力のお願い」
+"""
+import io, os, json, re
+
+ROOT = r"C:/dev/sumai-shiori"
+KANRI_NAME, KANRI_TEL, KANRI_HREF = "邑ハウジング株式会社", "03-3948-0101", "0339480101"
+KINKYU_TEL, KINKYU_HREF = "03-5923-7250", "0359237250"
+UPDATED = "2026年9月9日"
+
+# ---- お知らせ（更新情報）--------------------------------------------------
+# 🔴 運用ルール：入居者に関係する内容を直したら、必ずここへ1行足す。
+#    ・3棟に共通する更新は NEWS_COMMON へ。1棟だけの更新は その棟の news_own へ。
+#    ・日付は "YYYY-MM-DD"。表示は日付の新しい順に並べ替わる。
+#    ・表示するのは新しい NEWS_SHOW 件だけ。古いものは書き足すたびに自然に落ちる
+#      （消さずに残しておけば、後から見返せる）。
+#    ・見出しは「何を直したか」が一目で分かる言い方にする（例：「〜を追加しました」）。
+#    ・画面の使い勝手だけの手直しは載せない。お知らせが操作の話で埋まると、
+#      ごみの分け方の変更のような大事な報せが埋もれるため。
+NEWS_SHOW = 6
+
+NEWS_COMMON = [
+    ("2026-09-09", "ごみの種類ごとの出し方（可燃・不燃・プラスチック・古紙）を追加しました"),
+    ("2026-09-09", "⚠️ 令和8年10月1日からプラスチックの分け方が変わります"),
+    ("2026-09-08", "粗大ごみの出し方と、区で収集できないものを追加しました"),
+    ("2026-09-07", "ゴミの収集曜日を追加しました"),
+]
+
+
+def news_html(own):
+    """共通ぶんと棟ごとのぶんを日付の新しい順にまとめ、新しい NEWS_SHOW 件を返す。"""
+    rows = sorted(NEWS_COMMON + own, key=lambda r: r[0], reverse=True)[:NEWS_SHOW]
+    out = []
+    for ymd, topic in rows:
+        y, m, d = ymd.split("-")
+        label = "%s年%s月%s日更新" % (y, int(m), int(d))
+        out.append(label + ("　" + topic if topic else ""))
+    return out
+
+DAYS = ["日", "月", "火", "水", "木", "金", "土"]
+
+# 外部の申込先。本文とリンク集の2か所から参照するので、直すのはここだけでよい。
+# URLは練馬区の冊子 令和8年度版 P.15/P.16 のQRコードをデコードして確認（2026-09-08）。
+SODAI_URL = "https://www.sodai-nerima.jp/eco/view/nerima/top.html"          # 申込システム
+SODAI_KUHP = "https://www.city.nerima.tokyo.jp/kurashi/gomi/wakekata/sodai.html"   # 区HP・料金検索つき
+SODAI_PAY = "https://www.city.nerima.tokyo.jp/kurashi/gomi/oshirase/sodaikessai.html"  # オンライン決済の案内
+
+# ============================== 共通の本文 ==============================
+
+BINKAN = """
+  <p>練馬区では、飲食用びん・缶・ペットボトルを専用の回収用コンテナ・袋で資源回収しています。<strong>中身は、空にしてから出してください。</strong></p>
+
+  <div class="note">
+    <p><strong>⚠️ 回収場所にご注意ください</strong><br>
+    回収場所は、可燃ごみや不燃ごみの<strong>通常の場所ではありません</strong>。<br>
+    <strong>毎週土曜日、ゴミ箱の前に置かれているコンテナです。</strong></p>
+  </div>
+
+  <h3 class="sub" id="dashikata">出し方</h3>
+
+  <div class="item">
+    <h3><span class="n">1</span>コンテナ・袋の設置</h3>
+    <p>週1回、「飲食用びん・缶・ペットボトル回収の日」の午前6時30分までに、決められた場所に回収用コンテナ・袋（下の写真）を設置します。<strong>最初に出す方は、回収用コンテナを組み立ててください。</strong></p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>午前9時までに直接入れる</h3>
+    <p>午前9時までに回収用コンテナ・袋に直接入れてください。（ビニール袋等は持ち帰ってください）</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>色で分けて入れる</h3>
+    <p>飲食用<strong>びん</strong>は<strong>赤色</strong>のコンテナ、飲食用<strong>缶</strong>は<strong>緑色</strong>のコンテナ、<strong>ペットボトル</strong>は<strong>青い</strong>回収袋に、それぞれ入れてください。</p>
+  </div>
+
+  <figure>
+    <img src="images/binkan_container.webp" alt="赤色のびん用コンテナ、緑色の缶用コンテナ、青いペットボトル回収袋" loading="lazy">
+    <figcaption>回収用コンテナ・袋（赤＝びん／緑＝缶／青い袋＝ペットボトル）</figcaption>
+  </figure>
+
+  <div class="note">
+    <p>※台風や降雪の場合には、回収用コンテナ・袋の設置・回収を中止することがあります。その場合は、次週以降の回収日に出してください。</p>
+  </div>
+"""
+
+KINKYU = """
+  <p>夜間や休日などに<strong>「火災・漏水・警報音」</strong>が発生した際は、下記の緊急対応センターに連絡してください。</p>
+
+  <div class="callbox">
+    <p class="cap">夜間・休日専用</p>
+    <p class="name">緊急対応センター</p>
+    <a class="call" href="tel:{KINKYU_HREF}">{KINKYU_TEL}</a>
+    <p class="sub">※夜間・休日以外は管理会社までご連絡ください。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ 緊急対応センターでは受けられないもの</strong><br>
+    「鍵の紛失、室内の不具合」等につきましては邑ハウジングでの対応になりますので、緊急対応センターでの対応はできません。受付時間内に邑ハウジングまでお問い合わせください。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ 費用について</strong><br>
+    お客様の過失やトラブルの状況により、休日夜間対応は有料となります。ご了承ください。</p>
+  </div>
+
+  <h3 class="sub" id="kanri">管理会社</h3>
+  <div class="callbox">
+    <p class="cap">受付時間 平日 9:00〜17:30（日曜日、祝日、その他休業日を除く）</p>
+    <p class="name">{KANRI_NAME}</p>
+    <a class="call" href="tel:{KANRI_HREF}">{KANRI_TEL}</a>
+  </div>
+""".replace("{KINKYU_HREF}", KINKYU_HREF).replace("{KINKYU_TEL}", KINKYU_TEL) \
+   .replace("{KANRI_NAME}", KANRI_NAME).replace("{KANRI_HREF}", KANRI_HREF).replace("{KANRI_TEL}", KANRI_TEL)
+
+CARDKEY = """
+  <p>カードキー受信部は電池で動作しています。電池残量🔋が少なくなると、⚠️警告音とバッテリーランプでお知らせします。</p>
+
+  <p><strong>表示が出た場合は、お手数ですが管理会社までご連絡ください。電池を交換いたします。</strong></p>
+
+  <div class="note">
+    <p><strong>⚠️ 電池が切れてしまうと</strong><br>
+    カードキーによる解錠ができなくなります。その場合、解錠に時間がかかること、手順が複雑になる可能性があります。表示が出た際はお早めに管理会社までご連絡ください。</p>
+  </div>
+
+  <h3 class="sub" id="douga">警告音とバッテリーランプの様子</h3>
+  <p>下記リンクより警告音とバッテリーランプの様子が確認できます。</p>
+  <ul class="links">
+    <li><a href="https://youtu.be/xtAAMJ9PZuE?t=112s" target="_blank" rel="noopener">電池交換の表示の様子（動画）</a></li>
+  </ul>
+"""
+
+GOMI_FUTATSU = """
+  <div class="note">
+    <p><strong>⚠️ お願い</strong><br>
+    ゴミ収集員の方から、袋の口がきちんと結ばれていないと中身がこぼれたり収集が難しいとのご指摘がありました。必ず袋の口をしっかり結んでからお出しいただきますようご協力をお願いいたします。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>プラごみに出せるもの</h3>
+    <p>リサイクルマークがある包装容器類のみです。これ以外のプラスチックは可燃ゴミとして出して下さい。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>ダンボールは畳んだ状態で</h3>
+    <p>集積所のスペースは限られており、ほかの住人の方の妨げにならぬようご配慮お願い致します。</p>
+  </div>
+"""
+
+# ============================== ごみの種類と出し方 ==============================
+# 🔴 9月中の告知。10月1日になったら CHANGE_NOTICE を CHANGE_NOTICE_AFTER に差し替える。
+#    （可燃ごみとプラスチックの2か所から参照しているので、直すのはここだけでよい）
+
+CHANGE_NOTICE = """
+  <div class="note">
+    <p><strong>🆕 令和8年10月1日から、プラスチックの分け方が変わります</strong><br>
+    これまで可燃ごみだったプラスチック製品（歯ブラシ・ハンガー・おもちゃなど）が、
+    <strong>「プラスチック」として資源に出せるようになります。</strong><br>
+    <strong>※9月30日までは、これまでどおり可燃ごみへお出しください。</strong></p>
+  </div>
+"""
+
+CHANGE_NOTICE_AFTER = """
+  <div class="note">
+    <p><strong>🆕 令和8年10月1日から、プラスチックの分け方が変わりました</strong><br>
+    これまで可燃ごみだったプラスチック製品（歯ブラシ・ハンガー・おもちゃなど）が、
+    <strong>「プラスチック」として資源に出せます。</strong></p>
+  </div>
+"""
+
+KANEN = """
+  <div class="item">
+    <h3><span class="n">1</span>出せるもの</h3>
+    <p><strong>生ごみ</strong>（水分をよく切ってください）／<strong>木の枝・草花</strong>（枝は長さ50cm・太さ10cm以下／草花の土は取り除いて）／<strong>ゴム製品</strong>（ゴム手袋・ゴムホース・長靴・ボール／ホースは50cm以下に切って）／<strong>革製品</strong>（バッグ・靴）／<strong>テープ類</strong>（ガムテープ・セロハンテープ・マスキングテープ）／<strong>保冷剤・乾燥剤</strong>／<strong>紙おむつ・生理用品</strong>（汚物を取り除いてから）</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>資源に出せない紙類</h3>
+    <p>写真／紙コップ／レシートなどの感熱紙／洗剤の空き箱／シュレッダーで細かくした紙／カップ麺の紙製容器　など</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>資源に出せないプラスチック</h3>
+    <p>まな板など<strong>厚み5mm以上</strong>があって固いもの／在宅医療用のプラスチック／<strong>汚れの落ちない</strong>プラスチック</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ 花火・マッチ</strong><br>
+    <strong>必ず水に一晩つけてから</strong>お出しください。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">4</span>出し方</h3>
+    <p><strong>ふた付きのごみ容器</strong>、または<strong>透明・半透明の袋</strong>に入れて口をしばってください。</p>
+    <p><strong>1回に出せるのは45リットルの袋で3袋まで</strong>です。引っ越しや片付けでこれを超える場合は<strong>有料</strong>になりますので、事前に練馬清掃事務所（<a href="tel:0339927141">03-3992-7141</a>）へご相談ください。</p>
+    <p>※おおむね30cm角を超えるものは粗大ごみです。</p>
+  </div>
+"""
+
+PLASTIC = """
+  <div class="item">
+    <h3><span class="n">1</span>容器包装プラスチック</h3>
+    <p><strong>プラマーク（プラ）が目印</strong>です。</p>
+    <p><strong>ボトル類</strong>（シャンプー・リンス・洗剤・乳酸菌飲料の容器）／<strong>パック類</strong>（カレールー・味噌・豆腐の容器）／<strong>カップ類</strong>（カップ麺・プリンの容器）／<strong>トレイ類</strong>（肉・魚のトレイ・刺身皿・せんべいの仕切り）／<strong>袋・フィルム・ラベル類</strong>（詰め替え用の袋・レジ袋・ペットボトルのラベル）／<strong>発泡スチロール箱・緩衝材</strong>（果物のネット・気泡緩衝材＝プチプチ）／<strong>その他</strong>（ペットボトルのキャップ・インスタントコーヒーのふた・薬のシート）</p>
+    <p>※発泡スチロール・緩衝材はプラマークの表示がなくても出せます。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>製品プラスチック（令和8年10月から）</h3>
+    <p><strong>入浴・洗面用品</strong>（洗面器・手桶・歯ブラシ・コップ）／<strong>台所用品</strong>（タッパー・フォーク・スプーン・スポンジ・ポリ袋・ポリ手袋・ストロー・弁当箱）／<strong>文具類・おもちゃ</strong>（クリアファイル・定規・ブロック）／<strong>日用品</strong>（ハンガー・CD・DVD（ケース含む）・じょうろ）</p>
+    <p>※多少、他の素材が混ざっていても回収します。<br>
+    ※弁当箱のゴムパッキンは可燃ごみへ。<br>
+    ※ひも類は長さ50cm以下、レジャーシート類は一辺50cm以下に切ってください。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>出し方</h3>
+    <p>汚れのあるものは<strong>すすいで汚れを落として</strong>ください（すすいでも落ちないものは可燃ごみへ）。</p>
+    <p><strong>ふた付きのごみ容器</strong>、または<strong>透明・半透明の袋</strong>に入れて口をしばってください。</p>
+    <p><strong>容器包装プラスチックと製品プラスチックは、分けずに同じ袋</strong>に入れてください。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ 二重袋にしないでください</strong><br>
+    回収後に異物を手作業で取り除いているため、<strong>小袋に入れたものはそのまま</strong>お出しください。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ プラスチックに出せないもの</strong><br>
+    ・<strong>モバイルバッテリー・加熱式たばこ・ハンディファン</strong>　→ 不燃ごみへ（<strong>他の不燃ごみとは別の袋</strong>で）<br>
+    ・<strong>ペットボトル本体</strong>　→ びん・缶・ペットボトルへ<br>
+    ・在宅医療用のプラスチック　→ 可燃ごみへ<br>
+    ・<strong>刃物などがついているもの</strong>　→ 厚紙などで包んで「キケン」と書いて不燃ごみへ<br>
+    ・金属部品を多く含むもの（傘・リモコン・ドライヤー）　→ 不燃ごみへ<br>
+    ・まな板など厚み5mm以上のもの／シリコン製品／ゴム製品　→ 可燃ごみへ<br>
+    ・おおむね30cm角を超えるもの（衣装ケースなど）　→ 粗大ごみへ</p>
+  </div>
+"""
+
+FUNEN = """
+  <div class="item">
+    <h3><span class="n">1</span>出せるもの</h3>
+    <p><strong>陶器・ガラス</strong>／<strong>金属類</strong>（針金ハンガー・使い捨てカイロ・アルミホイル など）／<strong>LED・白熱電球</strong>／<strong>電子体温計・電子血圧計</strong>／<strong>30cm角以下の小型家電</strong>（コードは束ねてください）</p>
+    <p>※金属製のなべ・やかん・フライパンは資源回収です。<br>
+    ※水銀を含む体温計・血圧計は清掃事務所にご相談ください。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ 刃物類は包んでください</strong><br>
+    包丁・はさみ・カミソリなどは、<strong>厚紙などで包んで「キケン」と書いて</strong>お出しください。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ 他の不燃ごみとは「別の袋」で出すもの</strong><br>
+    ・<strong>蛍光管</strong>（購入時の箱や新聞紙などに包んで）<br>
+    ・<strong>モバイルバッテリー・加熱式たばこ・ガスライター・スプレー缶・カセットガスボンベ</strong><br>
+    中身が残っているガスライター・スプレー缶・カセットガスボンベ、膨張した充電式電池を含む製品は、<strong>清掃事務所へお持ちください</strong>（不燃ごみ収集日に職員へ直接お渡しすることもできます）。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>収集日について</h3>
+    <p><strong>「第1・第3 火曜」＝その月の1回目と3回目の火曜日</strong>です。<br>
+    月に火曜が5回ある場合、<strong>5回目の週は収集がありません。</strong></p>
+    <p>※おおむね30cm角を超えるものは粗大ごみです。</p>
+  </div>
+"""
+
+KOSHI = """
+  <div class="item">
+    <h3><span class="n">1</span>出せるもの</h3>
+    <p><strong>新聞</strong>（折り込みチラシも一緒に）／<strong>雑誌</strong>（本・パンフレット・お菓子の箱・贈答品の箱・包装紙も）／<strong>ダンボール</strong>（必ず畳んで）／<strong>紙パック</strong>（すすいで乾かし、切り開いて。アルミ付きも出せます）</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>雑がみも資源に出せます</h3>
+    <p>ティッシュペーパーの箱／お菓子の箱／紙袋／メモ用紙／包装紙／トイレットペーパーの芯／封筒・はがき／割り箸の袋／値札・商品タグ　など</p>
+    <p><strong>雑誌などに挟むか、紙袋に入れて</strong>お出しください。<br>
+    ※窓付き封筒やティッシュの箱は、ビニールなどをはずしてください。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ 出し方のお願い</strong><br>
+    ・<strong>種類ごとにひもで束ねて</strong>ください。<strong>レジ袋やビニール袋には入れないでください。</strong><br>
+    ・<strong>ダンボールとその他の古紙は、回収する車両が違います。</strong><br>
+    ・雨の日も回収しています。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>古紙に出せないもの</h3>
+    <p>写真／紙コップなど防水加工されたもの／カバンや靴の詰め物／レシートなどの感熱紙／シュレッダーで細かくした紙／においが付着したもの　など</p>
+    <p>→ <strong>可燃ごみ</strong>へお出しください。</p>
+  </div>
+"""
+
+SRC_LINE = '      <p class="src">出典：練馬区「資源とごみの分け方と出し方」令和8年度版</p>\n'
+
+
+def shurui_block(koshi_label):
+    """棟ごとに古紙の曜日だけ差し替えて、4種類の開閉セクションを組む。"""
+    rows = [
+        ("s-kanen", "🔥", "可燃ごみ（月曜・木曜）", CHANGE_NOTICE + KANEN),
+        ("s-funen", "🔩", "不燃ごみ（第1・第3 火曜）", FUNEN),
+        ("s-plastic", "♻️", "プラスチック（水曜）", CHANGE_NOTICE + PLASTIC),
+        ("s-koshi", "📄", koshi_label, KOSHI),
+    ]
+    out = ['  <h3 class="sub" id="shurui">ごみの種類と出し方</h3>',
+           '  <p class="hint">見出しをタップすると開きます。</p>']
+    for sid, ico, title, body in rows:
+        out.append("""
+  <details class="sec" id="%s">
+    <summary><span class="ico">%s</span>%s</summary>
+    <div class="sec-wrap"><div class="sec-inner">
+    <div class="sec-body">
+%s
+%s    </div>
+    </div></div>
+  </details>""" % (sid, ico, title, body, SRC_LINE))
+    return "\n".join(out) + "\n"
+
+SODAI = """
+  <h3 class="sub" id="sodai">粗大ごみの出し方</h3>
+
+  <div class="note">
+    <p><strong>⚠️ 粗大ごみは集積所には出せません。</strong>申込制・有料です。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">1</span>粗大ごみとは</h3>
+    <p><strong>30cm×30cm×30cm の立方体に入らないもの</strong>が粗大ごみです。</p>
+    <p>※粗大ごみに該当する品目は、<strong>分解・切断しても粗大ごみ</strong>のままです。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>申し込む</h3>
+    <p><strong>お電話</strong>　<a href="tel:0357035399">03-5703-5399</a><br>
+    受付時間 8:00〜19:00（月〜土・祝日を含む／12月29日〜1月3日を除く）</p>
+    <p>※申し込む前に、品目の<strong>高さ・幅・奥行</strong>を測っておいてください。<br>
+    ※ご希望の日に収集できない場合があります。お早めにどうぞ。</p>
+    <ul class="links">
+      <li><a href="{SODAI_URL}" target="_blank" rel="noopener">インターネットで申し込む<span>24時間受付・練馬区粗大ごみ受付センター</span></a></li>
+      <li><a href="{SODAI_KUHP}" target="_blank" rel="noopener">品目ごとの料金を調べる<span>練馬区ホームページ</span></a></li>
+    </ul>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>料金を払う</h3>
+    <p><strong>🆕 令和8年4月1日から、インターネットで収集を申し込むとオンライン決済（キャッシュレス決済）が使えます。</strong>有料粗大ごみ処理券を買いに行く必要がありません。</p>
+    <p>お支払い後、<strong>縦横10cm以上の紙</strong>やガムテープなどに<strong>「収集日」と「受付番号の下5桁」</strong>を書いて、すべての品目の見やすい場所に、テープで<strong>4辺をしっかり</strong>貼り付けてください。</p>
+    <p>※紙が貼られていないものは収集できません。<br>
+    ※オンライン決済では<strong>領収書は発行されません</strong>（必要な方は有料粗大ごみ処理券をご利用ください）。<br>
+    ※持込みの場合はオンライン決済をご利用いただけません。</p>
+    <ul class="links">
+      <li><a href="{SODAI_PAY}" target="_blank" rel="noopener">オンライン決済のくわしい説明<span>練馬区ホームページ</span></a></li>
+    </ul>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">4</span>出す</h3>
+    <p><strong>粗大ごみ置き場、または敷地入口付近</strong>に出してください。</p>
+    <p><strong>収集日当日の朝8時まで</strong>にお願いします（収集は8時〜16時の間に行います）。</p>
+  </div>
+
+  <p class="src">出典：練馬区「資源とごみの分け方と出し方」令和8年度版</p>
+""".replace("{SODAI_URL}", SODAI_URL).replace("{SODAI_KUHP}", SODAI_KUHP).replace("{SODAI_PAY}", SODAI_PAY)
+
+NOSHUUSHUU = """
+  <h3 class="sub" id="dasenai">区では収集できないもの</h3>
+
+  <p>下記のものは<strong>練馬区では収集できません</strong>。引っ越しや買い替えのときはご注意ください。</p>
+
+  <div class="item">
+    <h3><span class="n">1</span>処理困難物</h3>
+    <p>消火器／塗料／灯油・ガソリン／タイヤ／ピアノ／プロパンガスボンベ／農薬・劇薬／自動車バッテリー／レンガ／ブロック・石／土・砂　など</p>
+    <p>購入店やメーカー、専門の処理業者へご依頼ください。業者が分からない場合は<strong>練馬清掃事務所（<a href="tel:0339927141">03-3992-7141</a>）</strong>へご相談ください。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>エアコン・テレビ・冷蔵庫・冷凍庫・洗濯機・衣類乾燥機</h3>
+    <p>家電リサイクル法の対象です。<strong>新たに購入するお店</strong>または<strong>その商品を購入したお店</strong>に引き取ってもらうか、下記へお申し込みください。</p>
+    <p><strong>家電リサイクル受付センター　<a href="tel:0570087200">0570-087200</a></strong>（月〜金 9:00〜17:00・祝日と年末年始を除く）<br>
+    インターネットは24時間受付：<a href="https://kaden23rc.jp" target="_blank" rel="noopener">kaden23rc.jp</a></p>
+    <p>※メーカーや型番を調べてからお申し込みください。収集・運搬料金とリサイクル料金がかかります。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>家庭用パソコン</h3>
+    <p>メーカーによる回収、または宅配便による回収をご利用ください。区と協定を結んでいる<strong>リネットジャパンリサイクル株式会社（<a href="tel:0570085800">0570-085-800</a>）</strong>が回収を行っています。</p>
+    <p>※プリンターやスキャナーは粗大ごみです。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ 使用済みの注射針は集積所に出さないでください</strong><br>
+    在宅医療で使用した注射針は、専用の回収容器に入れて、購入した薬局へお戻しください。</p>
+  </div>
+
+  <p class="src">出典：練馬区「資源とごみの分け方と出し方」令和8年度版</p>
+"""
+
+NERIMA_LINKS = """
+  <h3 class="sub" id="nerima">練馬区のご案内（外部リンク）</h3>
+  <ul class="links">
+    <li><a href="https://www.city.nerima.tokyo.jp/kurashi/gomi/wakekata/pura.html" target="_blank" rel="noopener">容器包装プラスチック</a></li>
+    <li><a href="https://www.city.nerima.tokyo.jp/kurashi/gomi/wakekata/denchi.html" target="_blank" rel="noopener">電池の出し方</a></li>
+    <li><a href="https://www.city.nerima.tokyo.jp/kurashi/gomi/oshirase/kasaizouka.html" target="_blank" rel="noopener">モバイルバッテリー・ハンディファン・加熱式たばこ等の処理</a></li>
+  </ul>
+"""
+
+CLOSING = """
+  <p class="closing">お互いがマナーを守り、住みやすい環境を保っていただけますよう<br>
+  ご理解・ご協力をお願い申し上げます。</p>
+"""
+
+KYOYO_CLOSING = """
+  <p class="closing">共用部分は、全ての住人が利用する場所であり、快適な共同生活を維持するために大切な場所です。<br>
+  お互いがマナーを守り、住みやすい環境を保っていただけますようご理解・ご協力をお願い申し上げます。</p>
+"""
+
+
+def week_strip(cat, name, note, on, words):
+    li = "".join('<li%s>%s</li>' % (' class="on"' if d in on else '', d) for d in DAYS)
+    return '''
+  <div class="gd" data-cat="%s">
+    <div class="gd-head"><span class="gd-name">%s</span><span class="gd-note">%s</span></div>
+    <ul class="gd-week">%s</ul>
+    <p class="sr-only">%s</p>
+  </div>''' % (cat, name, note, li, words)
+
+
+def youbi_block(rows, town, extra_note=""):
+    out = ['  <h3 class="sub" id="youbi">この建物の収集曜日</h3>']
+    for r in rows:
+        out.append(week_strip(*r))
+    out.append('''
+  <div class="note">
+    <p>いずれも<strong>収集日の朝8時まで</strong>に集積所へお出しください。%s<br>
+    <span class="src">出典：練馬区「資源とごみの分け方と出し方」令和8年10月現在（%s）</span></p>
+  </div>
+''' % (extra_note, town))
+    return "\n".join(out)
+
+
+# ============================== 棟ごとの定義 ==============================
+
+BURN = ("burnable", "可燃ごみ", "週2回", ["月", "木"], "可燃ごみの収集日は毎週月曜日と木曜日です。")
+NONB = ("nonburn", "不燃ごみ", "第1・第3週", ["火"], "不燃ごみの収集日は第1・第3週の火曜日です。")
+BOTT = ("bottle", "びん・缶・ペットボトル", "週1回", ["土"], "びん・缶・ペットボトルの収集日は毎週土曜日です。")
+PLAS_KOSHI = ("plastic", "プラスチック・古紙", "週1回", ["水"], "プラスチックと古紙の収集日は毎週水曜日です。")
+PLAS_ONLY = ("plastic", "プラスチック", "週1回", ["水"], "プラスチックの収集日は毎週水曜日です。")
+KOSHI_TUE = ("paper", "古紙・古布", "週1回", ["火"], "古紙と古布の収集日は毎週火曜日です。町会の資源回収のため、区の収集日とは異なります。")
+
+BUILDINGS = []
+
+# ---------- ファミーユ豊玉Ⅲ ----------
+BUILDINGS.append(dict(
+    dir="famille3",
+    name="ホームファミーユ豊玉Ⅲ",
+    town="豊玉北4丁目",
+    current_url="https://sites.google.com/view/famille32025",
+    news_own=[
+        ("2025-12-09", ""),
+        ("2025-10-15", ""),
+        ("2025-10-01", ""),
+        ("2025-09-26", ""),
+        ("2025-09-19", ""),
+        ("2025-09-12", ""),
+    ],
+    youbi=youbi_block([BURN, NONB, PLAS_KOSHI, BOTT], "豊玉北4丁目"),
+    koshi_label="古紙（水曜）",
+    gomi_first="""
+  <div class="item">
+    <h3><span class="n">1</span>可燃ゴミ・容器包装プラゴミ等</h3>
+    <p><strong>集荷当日の朝（8:00まで）</strong>に出して頂くようご協力お願い致します。</p>
+  </div>
+""",
+    gomi_extra="""
+  <div class="item">
+    <h3><span class="n">4</span>LEDライトについて</h3>
+    <p>通行人が無断でゴミ入れにゴミを入れていくケースがあり、注意喚起用にLEDライトを付けております。通行人による無断投棄を抑制するための対策であることをご理解いただけますようお願い申し上げます。</p>
+    <p>※夜間のみ点灯します</p>
+  </div>
+""",
+    kyoyo="""
+  <div class="item">
+    <h3><span class="n">1</span>ゴミの放置・私物を置かない</h3>
+    <p>共用部分にゴミの放置、私物（☂️傘など）を置かないようにしてください。</p>
+    <p>特に、廊下、玄関ドア、共用階段、郵便受け付近、エントランス通路などは、他の住人の方が利用する場所ですので、私物を放置しないようにし、清潔な状態を保ちましょう。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️ ドアノブ・手すりについて</strong><br>
+    共用部のドアノブ・手すり等に傘・袋・衣類などを掛けないでください。万一、本行為により共用部設備（ドアノブ等）を破損した場合は、<strong>当該破損の修理または交換に要する実費（部品・工賃等）を損害賠償として請求</strong>させていただきます。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>🧯 消防設備をふさがない</h3>
+    <p>火災や事故を防ぐため、共用部分には非常ベルや消火器などが設置されています。これらの設備を妨げないようにしましょう。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>📦 宅配ボックスは早めに</h3>
+    <p>宅配ボックスは限りがあります。荷物の到着を確認できましたら、できるだけ早めに取り出してください。スムーズな循環が共同生活を快適にします。ご協力をお願いします。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">4</span>🌲 植栽の管理について</h3>
+    <p>植栽管理のため、定期的に作業員が各住戸前（ベランダ側）を使用させていただく場合がございます。皆さまに快適にお過ごしいただくための手入れですので、何卒ご理解くださいますようお願いいたします。</p>
+  </div>
+""" + KYOYO_CLOSING,
+    has_cardkey=True,
+))
+
+# ---------- ファミーユ豊玉Ⅱ ----------
+BUILDINGS.append(dict(
+    dir="famille2",
+    name="ホームファミーユ豊玉Ⅱ",
+    town="豊玉北4丁目",
+    current_url="https://sites.google.com/view/famille22025",
+    news_own=[
+        ("2025-10-27", ""),
+        ("2025-10-23", ""),
+        ("2025-10-14", ""),
+        ("2025-09-26", ""),
+        ("2025-09-19", ""),
+        ("2025-09-12", ""),
+    ],
+    youbi=youbi_block(
+        [BURN, NONB, PLAS_ONLY, KOSHI_TUE, BOTT], "豊玉北4丁目",
+        extra_note='<br><strong>古紙・古布は町会の資源回収のため、区の収集日（水曜）ではなく火曜日</strong>です。'),
+    koshi_label="古紙・古布（火曜）",
+    gomi_first="""
+  <div class="item">
+    <h3><span class="n">1</span>可燃ゴミ・容器包装プラゴミ等</h3>
+    <p>ポリバケツに入りきらない大きい袋をお使いの場合、個別に分けて頂くか、<strong>集荷当日の朝（8:00まで）</strong>に出して頂くようご協力お願い致します。</p>
+  </div>
+""",
+    gomi_extra="",
+    kyoyo="""
+  <div class="item">
+    <h3><span class="n">1</span>ゴミの放置・私物を置かない</h3>
+    <p>共用部分にゴミの放置、私物（☂️傘など）を置かないようにしてください。</p>
+    <p>特に、廊下、玄関ドア、共用階段、郵便受け付近、エントランス通路などは、<strong>災害時避難通路</strong>にもなり他の住人の方が利用する場所ですので、私物を放置しないようにし、清潔な状態を保ちましょう。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>🧯 消防設備をふさがない</h3>
+    <p>火災や事故を防ぐため、共用部分には非常ベルや消火器などが設置されています。これらの設備を妨げないようにしましょう。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>📦 宅配ボックスは早めに</h3>
+    <p>宅配ボックスは限りがあります。荷物の到着を確認できましたら、できるだけ早めに取り出してください。スムーズな循環が共同生活を快適にします。ご協力をお願いします。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">4</span>🔒 非常用階段の施錠</h3>
+    <p>エントランス左側の非常用階段をご利用の際は、防犯・安全確保のため開錠後、必ず施錠していただきますようお願いいたします。</p>
+  </div>
+
+  <div class="note">
+    <p><strong>⚠️【重要】駐輪場扉の施錠徹底のお願い</strong><br>
+    駐輪場扉を開閉時に使用した<strong>ストッパーは、出入り後必ず外し、扉が閉まったことを確認してください。</strong><br>
+    扉の開けっ放しは、<strong>不審者の侵入</strong>を許すことにつながります（<strong>過去に侵入事案あり</strong>）。<br>
+    皆様の<strong>防犯と安全確保</strong>のため、ワンアクションのご協力をお願いいたします。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">5</span>👶 階段下スペースについて</h3>
+    <p>階段下スペースは、ベビーカー置き場としてご利用いただけますが、スペースに限りがありますので、他の居住者の方も気持ちよく利用できるよう、譲り合ってご使用ください。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">6</span>🧹 北側窓格子の清掃</h3>
+    <p>不定期ではございますが、北側窓格子を拭き掃除する場合がございます。予めご了承下さい。</p>
+  </div>
+""" + KYOYO_CLOSING,
+    has_cardkey=False,
+))
+
+# ---------- ラヴィール豊玉 ----------
+BUILDINGS.append(dict(
+    dir="laville",
+    name="ラヴィール豊玉",
+    town="豊玉中2丁目",
+    current_url="https://sites.google.com/view/laville2025",
+    news_own=[
+        ("2026-09-09", "玄関ドアの開閉についてのお願いを追加しました"),
+        ("2025-10-15", ""),
+        ("2025-09-26", ""),
+        ("2025-09-19", ""),
+        ("2025-09-12", ""),
+    ],
+    youbi=youbi_block([BURN, NONB, PLAS_KOSHI, BOTT], "豊玉中2丁目"),
+    koshi_label="古紙（水曜）",
+    gomi_first="""
+  <div class="item">
+    <h3><span class="n">1</span>可燃ゴミ・容器包装プラゴミ等</h3>
+    <p><strong>集荷当日の朝（8:00まで）</strong>に出して頂くようご協力お願い致します。</p>
+  </div>
+""",
+    gomi_extra="",
+    kyoyo="""
+  <div class="notice-strong">
+    <p class="nt">🚪 玄関ドアの開閉について（お願い）</p>
+    <p>玄関ドアが開放状態のため、<strong>害虫やゴミがエントランス内に度々侵入しております。</strong></p>
+    <p>また、<strong>盲導犬同伴で目のご不自由な方がいらっしゃる場合があります。</strong>扉が開放状態ですと、<strong>エントランス内の出入りにご苦労されることが予想されます。</strong></p>
+    <p class="last"><strong>お出かけ・お帰りの際は、ドアを閉めていただけるよう心掛けをお願い致します。</strong></p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">1</span>ゴミの放置・私物を置かない</h3>
+    <p>共用部分にゴミの放置、私物（☂️傘など）を置かないようにしてください。</p>
+    <p>特に、廊下、玄関ドア、共用階段、郵便受け付近、エントランス通路などは、他の住人の方が利用する場所ですので、私物を放置しないようにし、清潔な状態を保ちましょう。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>🧯 消防設備をふさがない</h3>
+    <p>火災や事故を防ぐため、共用部分には非常ベルや消火器などが設置されています。これらの設備を妨げないようにしましょう。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>📦 宅配ボックスは早めに</h3>
+    <p>宅配ボックスは限りがあります。荷物の到着を確認できましたら、できるだけ早めに取り出してください。スムーズな循環が共同生活を快適にします。ご協力をお願いします。</p>
+  </div>
+
+  <h3 class="sub" id="pet">🐾 ペットに関するご協力のお願い</h3>
+
+  <div class="item">
+    <h3><span class="n">1</span>共用部分でのマナー</h3>
+    <p>廊下・エレベーター・エントランス等の共用部分では、必ずリードを短く持つか、抱きかかえて移動してください。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">2</span>鳴き声や物音</h3>
+    <p>長時間の鳴き声や夜間の物音は、他の居住者の迷惑となります。しつけ・環境整備にご協力ください。</p>
+  </div>
+
+  <div class="item">
+    <h3><span class="n">3</span>排泄物の処理</h3>
+    <p>敷地内・共用部分での排泄は禁止です。万一の場合は速やかに清掃してください。</p>
+  </div>
+""" + KYOYO_CLOSING,
+    has_cardkey=False,
+))
+
+# ============================== 組み立て ==============================
+
+FAVICON = ('<link rel="icon" href="data:image/svg+xml,'
+           "%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E"
+           "%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E\">")
+
+
+def build(b):
+    pages = [
+        dict(id="gomi", file="gomi.html", nav="ゴミ出し", title="ゴミの出し方について",
+             icon="🗑️", img="gomi.webp", alt="可燃ゴミと容器包装プラスチックのゴミ箱",
+             body=b["gomi_first"] + GOMI_FUTATSU + b["gomi_extra"] + b["youbi"] + shurui_block(b["koshi_label"]) + SODAI + NOSHUUSHUU + NERIMA_LINKS + CLOSING),
+        dict(id="kyoyo", file="kyoyo.html", nav="共用部分の扱いについて", title="共用部分の扱いについて",
+             icon="🏢", img="kyoyo.webp", alt="ものが置かれていない、きれいに保たれた共用廊下",
+             body=b["kyoyo"]),
+        dict(id="binkan", file="binkan.html", nav="ビン・缶・ペットボトル回収について",
+             title="ビン・缶・ペットボトル回収について",
+             icon="🥫", img="binkan.webp", alt="ビン・ペットボトル・缶に分けられた回収ボックス",
+             body=BINKAN),
+    ]
+    if b["has_cardkey"]:
+        pages.append(dict(id="cardkey", file="cardkey.html", nav="カードキーについて", title="カードキーについて",
+                          icon="🔑", img="cardkey.webp", alt="カードキーをかざして解錠する様子", body=CARDKEY))
+    pages.append(dict(id="kinkyu", file="kinkyu.html", nav="夜間・休日緊急連絡先について",
+                      title="夜間・休日緊急連絡先について",
+                      icon="🚨", img="kinkyu.webp", alt="夜間に電話で連絡している様子", body=KINKYU))
+
+    out = os.path.join(ROOT, b["dir"])
+    os.makedirs(out, exist_ok=True)
+
+    def nav_html(current):
+        li = ['      <li><a href="index.html"%s>ホーム</a></li>' %
+              (' class="is-current" aria-current="page"' if current == "home" else "")]
+        for p in pages:
+            cur = ' class="is-current" aria-current="page"' if current == p["id"] else ""
+            li.append('      <li><a href="%s"%s>%s</a></li>' % (p["file"], cur, p["nav"]))
+        return "\n".join(li)
+
+    def header(current):
+        return """<a class="skiplink" href="#main">メインコンテンツにスキップ</a>
+<a class="skiplink" href="#nav">ナビゲーションにスキップ</a>
+
+<div class="contact-bar">
+  <a href="tel:{KH}">邑ハウジング問い合わせ：<strong>{KT}</strong></a>
+</div>
+
+<header class="site-header">
+  <div class="head-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-title">住まいのしおり</span>
+      <span class="brand-building">{BLD}</span>
+    </a>
+    <button type="button" class="navtoggle" id="navtoggle"
+            aria-label="メニューを開く" aria-expanded="false" aria-controls="nav">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="search">
+      <label class="sr-only" for="q">このサイトを検索</label>
+      <input type="search" id="q" placeholder="このサイトを検索" autocomplete="off">
+      <button type="button" id="qclear" aria-label="検索をクリア" hidden>×</button>
+      <div id="qresult" class="qresult" hidden></div>
+    </div>
+  </div>
+  <nav id="nav" class="site-nav" aria-label="サイト内のページ">
+    <ul>
+{NAV}
+    </ul>
+  </nav>
+</header>
+<div class="nav-backdrop" id="navbackdrop" hidden></div>
+""".replace("{KH}", KANRI_HREF).replace("{KT}", KANRI_TEL) \
+   .replace("{BLD}", b["name"]).replace("{NAV}", nav_html(current))
+
+    footer = """<footer class="site-footer">
+  <p class="co">{KN}</p>
+  <p><a href="tel:{KH}">{KT}</a></p>
+  <p class="hours">受付時間 平日 9:00〜17:30<br>（日曜日、祝日、その他休業日を除く）</p>
+  <p class="updated">このしおりの最終更新日：{UP}</p>
+</footer>
+""".replace("{KN}", KANRI_NAME).replace("{KH}", KANRI_HREF).replace("{KT}", KANRI_TEL).replace("{UP}", UPDATED)
+
+    def shell(title, current, body, desc):
+        return """<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="{DESC}">
+<title>{TITLE}</title>
+{FAV}
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+{HEAD}
+<main id="main">
+{BODY}
+</main>
+
+{FOOT}
+<a class="totop" href="#" aria-label="ページの先頭へ戻る"><span>▲</span>トップへ</a>
+<script src="search.js"></script>
+<script src="effects.js"></script>
+</body>
+</html>
+""".replace("{DESC}", desc).replace("{TITLE}", title).replace("{FAV}", FAVICON) \
+   .replace("{HEAD}", header(current)).replace("{BODY}", body).replace("{FOOT}", footer)
+
+    # ---- ホーム ----
+    home = ['  <h1>住まいのしおり</h1>',
+            '  <p class="lead">%s にお住まいの皆さまへ。</p>' % b["name"],
+            '',
+            '  <details class="sec sec-news" id="oshirase" data-scroll>',
+            '    <summary><span class="ico">📢</span>お知らせ（更新日）</summary>',
+            '    <div class="sec-wrap"><div class="sec-inner">',
+            '    <div class="sec-body">',
+            '      <ul class="news-list">']
+    for n in news_html(b["news_own"]):
+        home.append("        <li>%s</li>" % n)
+    home += ["      </ul>", "    </div>", "    </div></div>", "  </details>", '',
+             '  <h2 id="annai">暮らしのご案内<a class="anchor" href="#annai" aria-label="この見出しへのリンク">#</a></h2>',
+             '  <p class="hint">気になる項目をタップすると開きます。</p>']
+    for p in pages:
+        home.append("""
+  <details class="sec%s" id="%s" data-scroll>
+    <summary><span class="ico">%s</span>%s</summary>
+    <div class="sec-wrap"><div class="sec-inner">
+    <div class="sec-body">
+      <figure><img src="images/%s" alt="%s" loading="lazy"></figure>
+%s
+      <p class="page-link"><a href="%s">「%s」のページを開く ›</a></p>
+    </div>
+    </div></div>
+  </details>""" % (" is-alert" if p["id"] == "kinkyu" else "", p["id"], p["icon"], p["title"],
+                   p["img"], p["alt"], p["body"], p["file"], p["title"]))
+
+    io.open(os.path.join(out, "index.html"), "w", encoding="utf-8").write(
+        shell("住まいのしおり｜%s" % b["name"], "home", "\n".join(home),
+              "%s にお住まいの方向けの、ゴミの出し方・共用部分・緊急連絡先などのご案内です。" % b["name"]))
+
+    # ---- 各ページ ----
+    for i, p in enumerate(pages):
+        prev_p = pages[i-1] if i > 0 else None
+        next_p = pages[i+1] if i < len(pages)-1 else None
+        body = ['  <nav class="crumb" aria-label="パンくず"><a href="index.html">住まいのしおり</a> › <span>%s</span></nav>' % p["title"],
+                '  <h1>%s %s</h1>' % (p["icon"], p["title"]),
+                '  <figure data-scroll><img src="images/%s" alt="%s"></figure>' % (p["img"], p["alt"]),
+                p["body"], '',
+                '  <nav class="pager" aria-label="前後のページ">']
+        body.append('    <a class="prev" href="%s">‹ %s</a>' % (prev_p["file"], prev_p["title"]) if prev_p
+                    else '    <a class="prev" href="index.html">‹ 目次にもどる</a>')
+        body.append('    <a class="next" href="%s">%s ›</a>' % (next_p["file"], next_p["title"]) if next_p
+                    else '    <a class="next" href="index.html">目次にもどる ›</a>')
+        body.append("  </nav>")
+        io.open(os.path.join(out, p["file"]), "w", encoding="utf-8").write(
+            shell("%s｜住まいのしおり %s" % (p["title"], b["name"]), p["id"], "\n".join(body),
+                  "%s｜%s の住まいのしおり" % (p["title"], b["name"])))
+
+    # ---- 検索索引 ----
+    def strip(h):
+        h = re.sub(r"(?s)<[^>]+>", " ", h)
+        h = h.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+        return re.sub(r"\s+", " ", h).strip()
+
+    idx = [dict(t="ホーム（お知らせ・目次）", u="index.html", b=strip(" ".join(news_html(b["news_own"]))))]
+    for p in pages:
+        idx.append(dict(t=p["title"], u=p["file"], b=strip(p["body"])))
+
+    tpl = io.open(os.path.join(ROOT, "famille3", "search.js"), encoding="utf-8").read()
+    head, rest = tpl.split("var SEARCH_INDEX = ", 1)
+    rest = rest.split(";\n", 1)[1]
+    io.open(os.path.join(out, "search.js"), "w", encoding="utf-8").write(
+        head + "var SEARCH_INDEX = " + json.dumps(idx, ensure_ascii=False, separators=(",", ":")) + ";\n" + rest)
+
+    return len(pages)
+
+
+if __name__ == "__main__":
+    for b in BUILDINGS:
+        n = build(b)
+        print("%-10s %s  … %dページ + ホーム" % (b["dir"], b["name"], n))
