@@ -8,7 +8,7 @@
                  ／古紙・古布は町会の回収で火曜（区の収集日＝水曜ではない）
   ラヴィール豊玉 … 共用部分に「ペットに関するご協力のお願い」
 """
-import io, os, json, re
+import io, os, json, re, hashlib
 
 ROOT = r"C:/dev/sumai-shiori"
 KANRI_NAME, KANRI_TEL, KANRI_HREF = "邑ハウジング株式会社", "03-3948-0101", "0339480101"
@@ -678,6 +678,34 @@ def build(b):
     out = os.path.join(ROOT, b["dir"])
     os.makedirs(out, exist_ok=True)
 
+    # ---- 検索索引 ----
+    def strip(h):
+        h = re.sub(r"(?s)<[^>]+>", " ", h)
+        h = h.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+        return re.sub(r"\s+", " ", h).strip()
+
+    idx = [dict(t="ホーム（お知らせ・目次）", u="index.html", b=strip(" ".join(news_html(b["news_own"]))))]
+    for p in pages:
+        idx.append(dict(t=p["title"], u=p["file"], b=strip(p["body"])))
+
+    tpl = io.open(os.path.join(ROOT, "famille3", "search.js"), encoding="utf-8").read()
+    head, rest = tpl.split("var SEARCH_INDEX = ", 1)
+    rest = rest.split(";\n", 1)[1]
+    search_js = head + "var SEARCH_INDEX = " + \
+        json.dumps(idx, ensure_ascii=False, separators=(",", ":")) + ";\n" + rest
+    io.open(os.path.join(out, "search.js"), "w", encoding="utf-8").write(search_js)
+
+
+    # ---- CSS・JSの版番号（キャッシュ対策）----
+    # 🔴 これが無いと、style.css / effects.js を直しても入居者のブラウザが古い版を使い続ける。
+    #    ページを開いたままの人には、いつまでも新しい版が届かない（2026-09-09に実際に起きた）。
+    #    中身が変わったときだけ番号が変わるので、直していない回はキャッシュが効いたまま。
+    VER = hashlib.md5(
+        io.open(os.path.join(out, "style.css"), "rb").read()
+        + io.open(os.path.join(out, "effects.js"), "rb").read()
+        + search_js.encode("utf-8")).hexdigest()[:8]
+
+
     def nav_html(current):
         li = ['      <li><a href="index.html"%s>ホーム</a></li>' %
               (' class="is-current" aria-current="page"' if current == "home" else "")]
@@ -739,7 +767,7 @@ def build(b):
 <meta name="description" content="{DESC}">
 <title>{TITLE}</title>
 {FAV}
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v={VER}">
 </head>
 <body>
 
@@ -750,11 +778,11 @@ def build(b):
 
 {FOOT}
 <a class="totop" href="#" aria-label="ページの先頭へ戻る"><span>▲</span>トップへ</a>
-<script src="search.js"></script>
-<script src="effects.js"></script>
+<script src="search.js?v={VER}"></script>
+<script src="effects.js?v={VER}"></script>
 </body>
 </html>
-""".replace("{DESC}", desc).replace("{TITLE}", title).replace("{FAV}", FAVICON) \
+""".replace("{VER}", VER).replace("{DESC}", desc).replace("{TITLE}", title).replace("{FAV}", FAVICON) \
    .replace("{HEAD}", header(current)).replace("{BODY}", body).replace("{FOOT}", footer)
 
     # ---- ホーム ----
@@ -806,22 +834,6 @@ def build(b):
         io.open(os.path.join(out, p["file"]), "w", encoding="utf-8").write(
             shell("%s｜住まいのしおり %s" % (p["title"], b["name"]), p["id"], "\n".join(body),
                   "%s｜%s の住まいのしおり" % (p["title"], b["name"])))
-
-    # ---- 検索索引 ----
-    def strip(h):
-        h = re.sub(r"(?s)<[^>]+>", " ", h)
-        h = h.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
-        return re.sub(r"\s+", " ", h).strip()
-
-    idx = [dict(t="ホーム（お知らせ・目次）", u="index.html", b=strip(" ".join(news_html(b["news_own"]))))]
-    for p in pages:
-        idx.append(dict(t=p["title"], u=p["file"], b=strip(p["body"])))
-
-    tpl = io.open(os.path.join(ROOT, "famille3", "search.js"), encoding="utf-8").read()
-    head, rest = tpl.split("var SEARCH_INDEX = ", 1)
-    rest = rest.split(";\n", 1)[1]
-    io.open(os.path.join(out, "search.js"), "w", encoding="utf-8").write(
-        head + "var SEARCH_INDEX = " + json.dumps(idx, ensure_ascii=False, separators=(",", ":")) + ";\n" + rest)
 
     return len(pages)
 
