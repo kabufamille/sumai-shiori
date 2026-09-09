@@ -324,7 +324,10 @@ def shurui_block(koshi_label):
     return "\n".join(out) + "\n"
 
 SODAI = """
-  <h3 class="sub" id="sodai">粗大ごみの出し方</h3>
+  <details class="sec" id="sodai">
+    <summary><span class="ico">🛋️</span>粗大ごみの出し方</summary>
+    <div class="sec-wrap"><div class="sec-inner">
+    <div class="sec-body">
 
   <div class="note">
     <p><strong>⚠️ 粗大ごみは集積所には出せません。</strong>申込制・有料です。</p>
@@ -367,6 +370,9 @@ SODAI = """
   </div>
 
   <p class="src">出典：練馬区「資源とごみの分け方と出し方」令和8年度版</p>
+    </div>
+    </div></div>
+  </details>
 """.replace("{SODAI_URL}", SODAI_URL).replace("{SODAI_KUHP}", SODAI_KUHP).replace("{SODAI_PAY}", SODAI_PAY)
 
 NOSHUUSHUU = """
