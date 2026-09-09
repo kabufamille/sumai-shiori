@@ -376,7 +376,10 @@ SODAI = """
 """.replace("{SODAI_URL}", SODAI_URL).replace("{SODAI_KUHP}", SODAI_KUHP).replace("{SODAI_PAY}", SODAI_PAY)
 
 NOSHUUSHUU = """
-  <h3 class="sub" id="dasenai">区では収集できないもの</h3>
+  <details class="sec" id="dasenai">
+    <summary><span class="ico">🚫</span>区では収集できないもの</summary>
+    <div class="sec-wrap"><div class="sec-inner">
+    <div class="sec-body">
 
   <p>下記のものは<strong>練馬区では収集できません</strong>。引っ越しや買い替えのときはご注意ください。</p>
 
@@ -406,6 +409,9 @@ NOSHUUSHUU = """
   </div>
 
   <p class="src">出典：練馬区「資源とごみの分け方と出し方」令和8年度版</p>
+    </div>
+    </div></div>
+  </details>
 """
 
 NERIMA_LINKS = """
