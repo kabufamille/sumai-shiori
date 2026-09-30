@@ -13,7 +13,7 @@ import io, os, json, re, hashlib
 ROOT = r"C:/dev/sumai-shiori"
 KANRI_NAME, KANRI_TEL, KANRI_HREF = "邑ハウジング株式会社", "03-3948-0101", "0339480101"
 KINKYU_TEL, KINKYU_HREF = "03-5923-7250", "0359237250"
-UPDATED = "2026年9月9日"
+UPDATED = "2026年10月1日"
 
 # ---- お知らせ（更新情報）--------------------------------------------------
 # 🔴 運用ルール：入居者に関係する内容を直したら、必ずここへ1行足す。
@@ -27,6 +27,7 @@ UPDATED = "2026年9月9日"
 NEWS_SHOW = 6
 
 NEWS_COMMON = [
+    ("2026-10-01", "⚠️ 10月1日からプラスチックの分け方が変わりました（歯ブラシ・ハンガーなども水曜のプラスチックへ）"),
     ("2026-09-09", "ごみの種類ごとの出し方（可燃・不燃・プラスチック・古紙）を追加しました"),
     ("2026-09-09", "⚠️ 令和8年10月1日からプラスチックの分け方が変わります"),
     ("2026-09-08", "粗大ごみの出し方と、区で収集できないものを追加しました"),
@@ -155,7 +156,7 @@ GOMI_FUTATSU = """
 """
 
 # ============================== ごみの種類と出し方 ==============================
-# 🔴 9月中の告知。10月1日になったら CHANGE_NOTICE を CHANGE_NOTICE_AFTER に差し替える。
+# ✅ 2026-10-01 CHANGE_NOTICE_AFTER に差し替え済み（CHANGE_NOTICE は9月中の告知の控え）。
 #    （可燃ごみとプラスチックの2か所から参照しているので、直すのはここだけでよい）
 
 CHANGE_NOTICE = """
@@ -321,9 +322,9 @@ SRC_LINE = '      <p class="src">出典：練馬区「資源とごみの分け�
 def shurui_block(koshi_label):
     """棟ごとに古紙の曜日だけ差し替えて、4種類の開閉セクションを組む。"""
     rows = [
-        ("s-kanen", "🔥", "可燃ごみ（月曜・木曜）", CHANGE_NOTICE + IKOU + KANEN),
+        ("s-kanen", "🔥", "可燃ごみ（月曜・木曜）", CHANGE_NOTICE_AFTER + IKOU + KANEN),
         ("s-funen", "🔩", "不燃ごみ（第1・第3 火曜）", FUNEN),
-        ("s-plastic", "♻️", "プラスチック（水曜）", CHANGE_NOTICE + IKOU + PLASTIC),
+        ("s-plastic", "♻️", "プラスチック（水曜）", CHANGE_NOTICE_AFTER + IKOU + PLASTIC),
         ("s-koshi", "📄", koshi_label, KOSHI),
     ]
     out = ['  <h3 class="sub" id="shurui">ごみの種類と出し方</h3>',
