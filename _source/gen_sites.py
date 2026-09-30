@@ -144,7 +144,8 @@ GOMI_FUTATSU = """
 
   <div class="item">
     <h3><span class="n">2</span>プラごみに出せるもの</h3>
-    <p>リサイクルマークがある包装容器類のみです。これ以外のプラスチックは可燃ゴミとして出して下さい。</p>
+    <p>プラマークのついた容器包装に加えて、<strong>令和8年10月1日からは、歯ブラシ・ハンガー・タッパーなどのプラスチック製品も</strong>プラスチックとして出せます（同じ袋でかまいません）。<br>
+    くわしくは下の「ごみの種類と出し方」の<a href="#s-plastic">プラスチック（水曜）</a>をご覧ください。</p>
   </div>
 
   <div class="item">
@@ -417,7 +418,8 @@ NOSHUUSHUU = """
 NERIMA_LINKS = """
   <h3 class="sub" id="nerima">練馬区のご案内（外部リンク）</h3>
   <ul class="links">
-    <li><a href="https://www.city.nerima.tokyo.jp/kurashi/gomi/wakekata/pura.html" target="_blank" rel="noopener">容器包装プラスチック</a></li>
+    <li><a href="https://www.city.nerima.tokyo.jp/kurashi/gomi/wakekata/pura.html" target="_blank" rel="noopener">プラスチックの分け方（容器包装・製品）</a></li>
+    <li><a href="https://www.youtube.com/watch?v=EO72JJYqP1Y" target="_blank" rel="noopener">プラスチックの分別ポイント（動画・練馬区公式）</a></li>
     <li><a href="https://www.city.nerima.tokyo.jp/kurashi/gomi/wakekata/denchi.html" target="_blank" rel="noopener">電池の出し方</a></li>
     <li><a href="https://www.city.nerima.tokyo.jp/kurashi/gomi/oshirase/kasaizouka.html" target="_blank" rel="noopener">モバイルバッテリー・ハンディファン・加熱式たばこ等の処理</a></li>
   </ul>
