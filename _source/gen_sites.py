@@ -175,6 +175,18 @@ CHANGE_NOTICE_AFTER = """
   </div>
 """
 
+IKOU = """
+  <div class="ikou">
+    <p class="ikou-t">歯ブラシ・ハンガー・タッパー・おもちゃ などの<strong>プラスチック製品</strong></p>
+    <div class="ikou-row">
+      <div class="ikou-box ikou-before"><span class="ikou-when">9月30日まで</span><span class="ikou-ico">🔥</span><span class="ikou-where">可燃ごみ</span><span class="ikou-day">月曜・木曜</span></div>
+      <div class="ikou-arrow" aria-hidden="true">➜</div>
+      <div class="ikou-box ikou-after"><span class="ikou-when">10月1日から</span><span class="ikou-ico">♻️</span><span class="ikou-where">プラスチック</span><span class="ikou-day">水曜</span></div>
+    </div>
+    <p class="ikou-n">容器包装プラスチックと<strong>同じ袋</strong>に入れてください</p>
+  </div>
+"""
+
 KANEN = """
   <div class="item">
     <h3><span class="n">1</span>出せるもの</h3>
@@ -218,6 +230,10 @@ PLASTIC = """
     <p>※多少、他の素材が混ざっていても回収します。<br>
     ※弁当箱のゴムパッキンは可燃ごみへ。<br>
     ※ひも類は長さ50cm以下、レジャーシート類は一辺50cm以下に切ってください。</p>
+    <figure class="fig-kusyo">
+      <a href="images/plastic_seihin.webp" target="_blank" rel="noopener"><img src="images/plastic_seihin.webp" alt="10月から出せるプラスチック製品の例。入浴・洗面用品（洗面器・手桶・歯ブラシ・コップ）、台所用品（タッパー・フォーク・スプーン・スポンジ）、文具類・おもちゃ（クリアファイル・定規・ブロック）、日用品（ハンガー・CD・DVD・じょうろ）" loading="lazy"></a>
+      <figcaption>10月から出せるプラスチック製品の例（タップで拡大／出典：練馬区「資源とごみの分け方と出し方」P.12）</figcaption>
+    </figure>
   </div>
 
   <div class="item">
@@ -305,9 +321,9 @@ SRC_LINE = '      <p class="src">出典：練馬区「資源とごみの分け�
 def shurui_block(koshi_label):
     """棟ごとに古紙の曜日だけ差し替えて、4種類の開閉セクションを組む。"""
     rows = [
-        ("s-kanen", "🔥", "可燃ごみ（月曜・木曜）", CHANGE_NOTICE + KANEN),
+        ("s-kanen", "🔥", "可燃ごみ（月曜・木曜）", CHANGE_NOTICE + IKOU + KANEN),
         ("s-funen", "🔩", "不燃ごみ（第1・第3 火曜）", FUNEN),
-        ("s-plastic", "♻️", "プラスチック（水曜）", CHANGE_NOTICE + PLASTIC),
+        ("s-plastic", "♻️", "プラスチック（水曜）", CHANGE_NOTICE + IKOU + PLASTIC),
         ("s-koshi", "📄", koshi_label, KOSHI),
     ]
     out = ['  <h3 class="sub" id="shurui">ごみの種類と出し方</h3>',

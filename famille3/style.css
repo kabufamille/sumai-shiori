@@ -486,3 +486,20 @@ body.nav-locked{overflow:hidden;}
   .sec-body{opacity:1 !important;}
   .js .site-nav{transition:none !important;}
 }
+
+/* ---- 10月のプラスチック変更：今まで→これからの図（2026-09-30） ---- */
+.ikou{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 14px 12px;margin:0 0 18px;}
+.ikou-t{margin:0 0 10px;font-size:15px;text-align:center;}
+.ikou-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;}
+.ikou-box{border-radius:10px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;gap:2px;}
+.ikou-before{background:#f1efea;color:#6b6358;}
+.ikou-before .ikou-where{text-decoration:line-through;text-decoration-thickness:2px;}
+.ikou-after{background:#e7f3ea;color:#215a34;border:2px solid #3f8a57;}
+.ikou-when{font-size:13px;}
+.ikou-where{font-size:16px;font-weight:bold;white-space:nowrap;}
+.ikou-ico{font-size:22px;line-height:1.2;}
+.ikou-day{font-size:13px;}
+.ikou-arrow{font-size:22px;color:var(--accent);}
+.ikou-n{margin:10px 0 0;font-size:14px;text-align:center;color:var(--ink-sub);}
+.fig-kusyo{margin:14px 0 0;}
+.fig-kusyo figcaption{font-size:13px;}
