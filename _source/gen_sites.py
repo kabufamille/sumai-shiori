@@ -838,11 +838,10 @@ def build(b):
     <div class="sec-body">
       <figure><img src="images/%s" alt="%s" loading="lazy"></figure>
 %s
-      <p class="page-link"><a href="%s">「%s」のページを開く ›</a></p>
     </div>
     </div></div>
   </details>""" % (" is-alert" if p["id"] == "kinkyu" else "", p["id"], p["icon"], p["title"],
-                   p["img"], p["alt"], p["body"], p["file"], p["title"]))
+                   p["img"], p["alt"], p["body"]))
 
     io.open(os.path.join(out, "index.html"), "w", encoding="utf-8").write(
         shell("住まいのしおり｜%s" % b["name"], "home", "\n".join(home),
