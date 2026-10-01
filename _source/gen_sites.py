@@ -811,6 +811,7 @@ def build(b):
 <a class="totop" href="#" aria-label="ページの先頭へ戻る"><span>▲</span>トップへ</a>
 <script src="search.js?v={VER}"></script>
 <script src="effects.js?v={VER}"></script>
+<script data-goatcounter="https://sumai-shiori.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
 """.replace("{VER}", VER).replace("{DESC}", desc).replace("{TITLE}", title).replace("{FAV}", FAVICON) \
