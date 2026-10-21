@@ -13,7 +13,7 @@ import io, os, json, re, hashlib
 ROOT = r"C:/dev/sumai-shiori"
 KANRI_NAME, KANRI_TEL, KANRI_HREF = "邑ハウジング株式会社", "03-3948-0101", "0339480101"
 KINKYU_TEL, KINKYU_HREF = "03-5923-7250", "0359237250"
-UPDATED = "2026年10月1日"
+UPDATED = "2026年10月21日"
 
 # ---- お知らせ（更新情報）--------------------------------------------------
 # 🔴 運用ルール：入居者に関係する内容を直したら、必ずここへ1行足す。
@@ -27,6 +27,7 @@ UPDATED = "2026年10月1日"
 NEWS_SHOW = 6
 
 NEWS_COMMON = [
+    ("2026-10-21", "近所の催し（お祭り・地区祭など）のページを追加しました"),
     ("2026-10-01", "⚠️ 10月1日からプラスチックの分け方が変わりました（歯ブラシ・ハンガーなども水曜のプラスチックへ）"),
     ("2026-09-09", "ごみの種類ごとの出し方（可燃・不燃・プラスチック・古紙）を追加しました"),
     ("2026-09-09", "⚠️ 令和8年10月1日からプラスチックの分け方が変わります"),
@@ -46,6 +47,42 @@ def news_html(own):
     return out
 
 DAYS = ["日", "月", "火", "水", "木", "金", "土"]
+
+# ---- 近所の催し（2026-10-21）-------------------------------------------------
+# 🔴 中身は _source/kinjo.json（3棟共通）。月1回Claudeが候補を探し、けんじが選んだものだけ入れる。
+#    終わった催しはページを開いた時に隠れる（data-end と今日を比べる）＝消し忘れても古い催しは出ない。
+KINJO = json.load(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "kinjo.json"), encoding="utf-8"))
+KINJO_ICON = {"matsuri": "🏮", "bousai": "⛑️", "sumai": "🏠", "sonota": "📌"}
+
+
+def kinjo_body():
+    def ymd(d):
+        y, m, dd = map(int, d.split("-"))
+        import datetime
+        return "%d月%d日（%s）" % (m, dd, DAYS[(datetime.date(y, m, dd).weekday() + 1) % 7])
+    li = []
+    for e in sorted(KINJO["events"], key=lambda e: e["start"]):
+        end = e.get("end") or e["start"]
+        when = ymd(e["start"]) + ("〜" + ymd(end) if end != e["start"] else "")
+        if e.get("time"):
+            when += "　" + e["time"]
+        sub = "・".join(x for x in (e.get("place"), e.get("note")) if x)
+        li.append('    <li data-end="%s"><span class="kj-when">%s</span>'
+                  '<span class="kj-title">%s <a href="%s" target="_blank" rel="noopener">%s</a></span>%s</li>'
+                  % (end, when, KINJO_ICON.get(e.get("kind"), "📌"), e["url"], e["title"],
+                     '<span class="kj-sub">%s</span>' % sub if sub else ""))
+    y, m, d = KINJO["checked"].split("-")
+    return """
+  <p>豊玉の近くで開かれるお祭りや地区祭、防災の催しなどを、月に1回まとめています。</p>
+  <ul class="kinjo-list">
+%s
+  </ul>
+  <p class="kj-none" hidden>いまご案内できる催しはありません。来月の更新をお待ちください。</p>
+  <p class="note">日時や内容は変わることがあります。お出かけの前に、各催しのリンク先でご確認ください。（%s年%d月%d日に確認）</p>
+  <script>(function(){var t=new Date(),k=t.getFullYear()+"-"+("0"+(t.getMonth()+1)).slice(-2)+"-"+("0"+t.getDate()).slice(-2),n=0;
+  document.querySelectorAll(".kinjo-list li").forEach(function(li){if(li.getAttribute("data-end")<k){li.hidden=true;}else{n++;}});
+  if(!n){document.querySelectorAll(".kj-none").forEach(function(p){p.hidden=false;});}})();</script>
+""" % ("\n".join(li), y, int(m), int(d))
 
 # 外部の申込先。本文とリンク集の2か所から参照するので、直すのはここだけでよい。
 # URLは練馬区の冊子 令和8年度版 P.15/P.16 のQRコードをデコードして確認（2026-09-08）。
@@ -709,6 +746,8 @@ def build(b):
     if b["has_cardkey"]:
         pages.append(dict(id="cardkey", file="cardkey.html", nav="カードキーについて", title="カードキーについて",
                           icon="🔑", img="cardkey.webp", alt="カードキーをかざして解錠する様子", body=CARDKEY))
+    pages.append(dict(id="kinjo", file="kinjo.html", nav="近所の催し", title="近所の催し",
+                      icon="🏮", img=None, alt="", body=kinjo_body()))
     pages.append(dict(id="kinkyu", file="kinkyu.html", nav="夜間・休日緊急連絡先について",
                       title="夜間・休日緊急連絡先について",
                       icon="🚨", img="kinkyu.webp", alt="夜間に電話で連絡している様子", body=KINKYU))
@@ -718,6 +757,7 @@ def build(b):
 
     # ---- 検索索引 ----
     def strip(h):
+        h = re.sub(r"(?s)<script>.*?</script>", " ", h)
         h = re.sub(r"(?s)<[^>]+>", " ", h)
         h = h.replace("&nbsp;", " ").replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
         return re.sub(r"\s+", " ", h).strip()
@@ -844,12 +884,12 @@ def build(b):
     <summary><span class="ico">%s</span>%s</summary>
     <div class="sec-wrap"><div class="sec-inner">
     <div class="sec-body">
-      <figure><img src="images/%s" alt="%s" loading="lazy"></figure>
-%s
+%s%s
     </div>
     </div></div>
   </details>""" % (" is-alert" if p["id"] == "kinkyu" else "", p["id"], p["icon"], p["title"],
-                   p["img"], p["alt"], p["body"]))
+                   '      <figure><img src="images/%s" alt="%s" loading="lazy"></figure>\n' % (p["img"], p["alt"]) if p["img"] else "",
+                   p["body"]))
 
     io.open(os.path.join(out, "index.html"), "w", encoding="utf-8").write(
         shell("住まいのしおり｜%s" % b["name"], "home", "\n".join(home),
@@ -861,7 +901,7 @@ def build(b):
         next_p = pages[i+1] if i < len(pages)-1 else None
         body = ['  <nav class="crumb" aria-label="パンくず"><a href="index.html">住まいのしおり</a> › <span>%s</span></nav>' % p["title"],
                 '  <h1>%s %s</h1>' % (p["icon"], p["title"]),
-                '  <figure data-scroll><img src="images/%s" alt="%s"></figure>' % (p["img"], p["alt"]),
+                '  <figure data-scroll><img src="images/%s" alt="%s"></figure>' % (p["img"], p["alt"]) if p["img"] else "",
                 p["body"], '',
                 '  <nav class="pager" aria-label="前後のページ">']
         body.append('    <a class="prev" href="%s">‹ %s</a>' % (prev_p["file"], prev_p["title"]) if prev_p

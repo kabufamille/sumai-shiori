@@ -503,3 +503,12 @@ body.nav-locked{overflow:hidden;}
 .ikou-n{margin:10px 0 0;font-size:14px;text-align:center;color:var(--ink-sub);}
 .fig-kusyo{margin:14px 0 0;}
 .fig-kusyo figcaption{font-size:13px;}
+
+/* ---- 近所の催し（2026-10-21）---- */
+.kinjo-list{list-style:none;padding:0;margin:0 0 16px;}
+.kinjo-list li{padding:12px 2px;border-bottom:1px dashed var(--line);}
+.kinjo-list li:last-child{border-bottom:none;}
+.kj-when{display:block;font-size:14px;color:var(--accent);font-weight:700;}
+.kj-title{display:block;font-size:17px;font-weight:700;margin-top:2px;}
+.kj-sub{display:block;font-size:14px;color:var(--ink-sub);margin-top:2px;}
+.kj-none{color:var(--ink-sub);}
