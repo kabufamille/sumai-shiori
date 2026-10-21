@@ -1,53 +1,52 @@
 {
-  "_説明": "近所の催し（3棟共通）。月1回Claudeが候補を探し、けんじが選んだものだけここに入れて gen_sites.py を流す。start/end は YYYY-MM-DD（1日だけなら end は省略）。終わった催しはページを開いた時に自動で隠れる（消さなくてよい）。日時・場所は出典ページで確かめたものだけ書く。kind＝matsuri（祭り・フェスタ）／bousai（防災）／sumai（住まい・建物）／sonota",
+  "_説明": "近所の催し（3棟共通）。月1回Claudeがその月の分（1か月分だけ）の候補を探し、けんじが選んだものだけここに入れて gen_sites.py を流す。start/end は YYYY-MM-DD（1日だけなら end は省略）。終わった催しはページを開いた時に自動で隠れる（消さなくてよい）。日時・場所は出典ページで確かめたものだけ書く。kind＝matsuri（祭り・フェスタ）／bousai（防災）／sumai（住まい・建物）／sonota",
   "checked": "2026-10-21",
   "events": [
     {
-      "start": "2026-10-24", "end": "2026-10-25", "kind": "matsuri",
-      "title": "桜台フェスタ2026", "time": "11:00〜17:00",
-      "place": "桜台駅周辺", "note": "街歩き謎解きゲーム・お笑いライブなど",
+      "start": "2026-10-24",
+      "end": "2026-10-25",
+      "kind": "matsuri",
+      "title": "桜台フェスタ2026",
+      "time": "11:00〜17:00",
+      "place": "桜台駅周辺",
+      "note": "街歩き謎解きゲーム・お笑いライブなど",
       "url": "https://nerima.goguynet.jp/2026/09/23/sakuradai/"
     },
     {
-      "start": "2026-10-24", "end": "2026-11-03", "kind": "matsuri",
-      "title": "江古田のまちの芸術祭", "time": "",
-      "place": "江古田駅周辺", "note": "",
+      "start": "2026-10-24",
+      "end": "2026-11-03",
+      "kind": "matsuri",
+      "title": "江古田のまちの芸術祭",
+      "time": "",
+      "place": "江古田駅周辺",
+      "note": "",
       "url": "https://www.nerimakanko.jp/review/detail.php?article_id=SPE0000233"
     },
     {
-      "start": "2026-10-25", "kind": "matsuri",
-      "title": "秋まつり わくわくセール", "time": "13:00〜17:00",
-      "place": "旭丘銀座商店会（江古田駅周辺）", "note": "",
+      "start": "2026-10-25",
+      "kind": "matsuri",
+      "title": "秋まつり わくわくセール",
+      "time": "13:00〜17:00",
+      "place": "旭丘銀座商店会（江古田駅周辺）",
+      "note": "",
       "url": "https://www.nerima-kushoren.jp/eventlist"
     },
     {
-      "start": "2026-10-31", "kind": "matsuri",
-      "title": "江古田はひとつ2026 ハロウィンパーティー", "time": "13:00〜17:00",
-      "place": "江古田駅周辺", "note": "小雨決行・荒天時は11月1日に延期",
+      "start": "2026-10-31",
+      "kind": "matsuri",
+      "title": "江古田はひとつ2026 ハロウィンパーティー",
+      "time": "13:00〜17:00",
+      "place": "江古田駅周辺",
+      "note": "小雨決行・荒天時は11月1日に延期",
       "url": "https://www.nerimakanko.jp/review/detail.php?article_id=SPE0000233"
     },
     {
-      "start": "2026-10-31", "kind": "matsuri",
-      "title": "桜台地区祭", "time": "",
-      "place": "開進第四小学校", "note": "",
-      "url": "https://www.nerimakanko.jp/review/detail.php?article_id=SPE0000233"
-    },
-    {
-      "start": "2026-11-03", "kind": "matsuri",
-      "title": "ねりおと♪フェスティバル2026", "time": "10:30〜16:30",
-      "place": "練馬総合運動場公園", "note": "",
-      "url": "https://www.nerima-kushoren.jp/eventlist"
-    },
-    {
-      "start": "2026-11-29", "kind": "matsuri",
-      "title": "第一地区祭（豊玉南小学校）", "time": "",
-      "place": "豊玉南小学校", "note": "",
-      "url": "https://www.nerimakanko.jp/review/detail.php?article_id=SPE0000233"
-    },
-    {
-      "start": "2026-12-05", "kind": "matsuri",
-      "title": "第一地区祭（豊玉小学校）", "time": "",
-      "place": "豊玉小学校", "note": "",
+      "start": "2026-10-31",
+      "kind": "matsuri",
+      "title": "桜台地区祭",
+      "time": "",
+      "place": "開進第四小学校",
+      "note": "",
       "url": "https://www.nerimakanko.jp/review/detail.php?article_id=SPE0000233"
     }
   ]
