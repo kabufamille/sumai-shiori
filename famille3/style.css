@@ -512,3 +512,15 @@ body.nav-locked{overflow:hidden;}
 .kj-title{display:block;font-size:17px;font-weight:700;margin-top:2px;}
 .kj-sub{display:block;font-size:14px;color:var(--ink-sub);margin-top:2px;}
 .kj-none{color:var(--ink-sub);}
+
+/* pol のLINE案内（フッターの帯の外・2026-10-26）。下の一行は見えた時に1回だけ右から流れ込む */
+.sponsor-wrap{text-align:center;padding:20px 16px 80px;}
+.sponsor{display:inline-flex;align-items:center;gap:10px;text-decoration:none;text-align:left;opacity:.85;color:#8a7f74;}
+.sponsor img{width:40px;height:40px;border-radius:8px;display:block;flex:none;}
+.sponsor .sp-txt{display:flex;flex-direction:column;line-height:1.5;overflow:hidden;}
+.sponsor b{font-size:13px;color:var(--ink);font-weight:700;}
+.sponsor small{display:block;font-size:11.5px;letter-spacing:-.01em;font-weight:400;}
+.sponsor:hover{opacity:1;}
+.sponsor.wait small{opacity:0;}
+.sponsor.go small{animation:sp-in 1.6s ease-out both;}
+@keyframes sp-in{from{transform:translateX(100%);opacity:0;}to{transform:none;opacity:1;}}

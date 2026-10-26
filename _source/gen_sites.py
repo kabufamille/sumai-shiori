@@ -14,6 +14,8 @@ ROOT = r"C:/dev/sumai-shiori"
 KANRI_NAME, KANRI_TEL, KANRI_HREF = "邑ハウジング株式会社", "03-3948-0101", "0339480101"
 KINKYU_TEL, KINKYU_HREF = "03-5923-7250", "0359237250"
 UPDATED = "2026年10月21日"
+# フッターの帯の下に置く pol（けんじの店）のLINE案内。2026-10-26 けんじ決定・お知らせ欄には載せない。
+POL_LINE = "https://lin.ee/vKcp8Xd"
 
 # ---- お知らせ（更新情報）--------------------------------------------------
 # 🔴 運用ルール：入居者に関係する内容を直したら、必ずここへ1行足す。
@@ -833,7 +835,13 @@ def build(b):
   <p class="hours">受付時間 平日 9:00〜17:30<br>（日曜日、祝日、その他休業日を除く）</p>
   <p class="updated">このしおりの最終更新日：{UP}</p>
 </footer>
-""".replace("{KN}", KANRI_NAME).replace("{KH}", KANRI_HREF).replace("{KT}", KANRI_TEL).replace("{UP}", UPDATED)
+<div class="sponsor-wrap">
+  <a class="sponsor" href="{POL_LINE}" target="_blank" rel="noopener">
+    <img src="images/pol_logo_small.webp" alt="pol" width="40" height="40">
+    <span class="sp-txt"><b>焼き菓子とフルーツ酵母のパン pol</b><small>👈出店日や通販のご案内は、<wbr>LINEでお知らせ</small></span>
+  </a>
+</div>
+""".replace("{KN}", KANRI_NAME).replace("{KH}", KANRI_HREF).replace("{KT}", KANRI_TEL).replace("{UP}", UPDATED).replace("{POL_LINE}", POL_LINE)
 
     def shell(title, current, body, desc):
         return """<!DOCTYPE html>

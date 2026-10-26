@@ -201,3 +201,22 @@
     });
   });
 })();
+
+/* pol のLINE案内：見えた時に下の一行を1回だけ流し込む。
+   隠すのはJSが付ける wait の間だけ＝JSが動かなくても文字は出ている。3秒で必ず見える状態に戻す。 */
+(function () {
+  'use strict';
+  var s = document.querySelector('.sponsor');
+  if (!s || !('IntersectionObserver' in window)) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  s.classList.add('wait');
+  var fallback = setTimeout(function () { s.classList.remove('wait'); }, 3000);
+  var o = new IntersectionObserver(function (e) {
+    if (!e[0].isIntersecting) return;
+    clearTimeout(fallback);
+    s.classList.remove('wait');
+    s.classList.add('go');
+    o.disconnect();
+  }, { threshold: 0.6 });
+  o.observe(s);
+})();
