@@ -836,12 +836,14 @@ def build(b):
   <p class="updated">このしおりの最終更新日：{UP}</p>
 </footer>
 <div class="sponsor-wrap">
+  <p class="sp-cheer">{CHEER}も応援しています📣</p>
   <a class="sponsor" href="{POL_LINE}" target="_blank" rel="noopener">
     <img src="images/pol_logo_small.webp" alt="pol" width="40" height="40">
     <span class="sp-txt"><b>焼き菓子とフルーツ酵母のパン pol</b><small>👈出店日や通販のご案内は、<wbr>LINEでお知らせ</small></span>
   </a>
 </div>
-""".replace("{KN}", KANRI_NAME).replace("{KH}", KANRI_HREF).replace("{KT}", KANRI_TEL).replace("{UP}", UPDATED).replace("{POL_LINE}", POL_LINE)
+""".replace("{KN}", KANRI_NAME).replace("{KH}", KANRI_HREF).replace("{KT}", KANRI_TEL).replace("{UP}", UPDATED).replace("{POL_LINE}", POL_LINE) \
+   .replace("{CHEER}", b["name"].replace("ホーム", "", 1))
 
     def shell(title, current, body, desc):
         return """<!DOCTYPE html>
