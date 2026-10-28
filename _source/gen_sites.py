@@ -13,7 +13,7 @@ import io, os, json, re, hashlib
 ROOT = r"C:/dev/sumai-shiori"
 KANRI_NAME, KANRI_TEL, KANRI_HREF = "邑ハウジング株式会社", "03-3948-0101", "0339480101"
 KINKYU_TEL, KINKYU_HREF = "03-5923-7250", "0359237250"
-UPDATED = "2026年10月21日"
+UPDATED = "2026年10月28日"
 # フッターの帯の下に置く pol（けんじの店）のLINE案内。2026-10-26 けんじ決定・お知らせ欄には載せない。
 POL_LINE = "https://lin.ee/vKcp8Xd"
 
@@ -666,11 +666,25 @@ BUILDINGS.append(dict(
     town="豊玉中2丁目",
     current_url="https://sites.google.com/view/laville2025",
     news_own=[
+        ("2026-10-28", "⚠️ 11月25日（水）9:30〜12:00 貯水槽清掃のため断水します"),
         ("2026-09-09", "玄関ドアの開閉についてのお願いを追加しました"),
         ("2025-10-15", ""),
         ("2025-09-26", ""),
         ("2025-09-19", ""),
         ("2025-09-12", ""),
+    ],
+    # 期限つきの告知（ホームのいちばん上）。end を過ぎた日から自動で隠れる＝消し忘れても古い告知は出ない。
+    alerts=[
+        dict(end="2026-11-25", html="""
+    <p class="nt">🚰 貯水槽清掃・断水のお知らせ</p>
+    <p><strong>2026年11月25日（水）9:30〜12:00</strong> は貯水槽清掃のため<strong>断水</strong>します。<br>作業の状況により、断水時間が前後する場合があります。</p>
+    <p>・飲み水やトイレ用の水は、前もって汲み置きをお願いします。<br>
+    ・トイレタンクの水は空にしないでください（通水後の錆詰まりの原因になります）。<br>
+    ・断水中は蛇口などの水栓を<strong>必ず閉めて</strong>おいてください（開けたままだと通水時に水があふれることがあります）。<br>
+    ・作業後に最初に水を使うときは、<strong>洗面所か浴室の水栓</strong>からお使いください（トイレや台所からだと錆で目詰まりすることがあります）。<br>
+    ・濁り水が出たときは、少し流して透明になってからお使いください。</p>
+    <p class="last">お問い合わせ：邑ハウジング株式会社 管理課 <a href="tel:0339480101">03-3948-0101</a></p>
+"""),
     ],
     youbi=youbi_block([BURN, NONB, PLAS_KOSHI, BOTT], "豊玉中2丁目"),
     koshi_label="古紙（水曜）",
@@ -877,7 +891,13 @@ def build(b):
     # ---- ホーム ----
     home = ['  <h1>住まいのしおり</h1>',
             '  <p class="lead">%s にお住まいの皆さまへ。</p>' % b["name"],
-            '',
+            '']
+    for al in b.get("alerts", []):
+        home.append('  <div class="notice-strong alert-temp" data-end="%s">%s  </div>' % (al["end"], al["html"]))
+    if b.get("alerts"):
+        home += ['  <script>(function(){var t=new Date(),k=t.getFullYear()+"-"+("0"+(t.getMonth()+1)).slice(-2)+"-"+("0"+t.getDate()).slice(-2);',
+                 '  document.querySelectorAll(".alert-temp").forEach(function(d){if(d.getAttribute("data-end")<k){d.hidden=true;}});})();</script>', '']
+    home += [
             '  <details class="sec sec-news" id="oshirase" data-scroll>',
             '    <summary><span class="ico">📢</span>お知らせ（更新日）</summary>',
             '    <div class="sec-wrap"><div class="sec-inner">',
