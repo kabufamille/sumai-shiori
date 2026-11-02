@@ -57,21 +57,25 @@ KINJO = json.load(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)
 KINJO_ICON = {"matsuri": "🏮", "bousai": "⛑️", "sumai": "🏠", "sonota": "📌"}
 
 
-def kinjo_body():
+def kinjo_body(bdir):
     def ymd(d):
         y, m, dd = map(int, d.split("-"))
         import datetime
         return "%d月%d日（%s）" % (m, dd, DAYS[(datetime.date(y, m, dd).weekday() + 1) % 7])
     li = []
     for e in sorted(KINJO["events"], key=lambda e: e["start"]):
+        if bdir not in e.get("only", [bdir]):  # only＝載せる棟を絞る（無ければ3棟とも）
+            continue
         end = e.get("end") or e["start"]
         when = ymd(e["start"]) + ("〜" + ymd(end) if end != e["start"] else "")
         if e.get("time"):
             when += "　" + e["time"]
         sub = "・".join(x for x in (e.get("place"), e.get("note")) if x)
+        title = ('<a href="%s" target="_blank" rel="noopener">%s</a>' % (e["url"], e["title"])
+                 if e.get("url") else e["title"])  # 掲示物だけの催しはリンクなし
         li.append('    <li data-end="%s"><span class="kj-when">%s</span>'
-                  '<span class="kj-title">%s <a href="%s" target="_blank" rel="noopener">%s</a></span>%s</li>'
-                  % (end, when, KINJO_ICON.get(e.get("kind"), "📌"), e["url"], e["title"],
+                  '<span class="kj-title">%s %s</span>%s</li>'
+                  % (end, when, KINJO_ICON.get(e.get("kind"), "📌"), title,
                      '<span class="kj-sub">%s</span>' % sub if sub else ""))
     y, m, d = KINJO["checked"].split("-")
     return """
@@ -533,6 +537,7 @@ BUILDINGS.append(dict(
     town="豊玉北4丁目",
     current_url="https://sites.google.com/view/famille32025",
     news_own=[
+        ("2026-11-02", "🧹 11月29日（日）午前10時から豊玉北四丁目の地域内清掃があります（くわしくは「近所の催し」のページへ）"),
         ("2025-12-09", ""),
         ("2025-10-15", ""),
         ("2025-10-01", ""),
@@ -592,6 +597,7 @@ BUILDINGS.append(dict(
     town="豊玉北4丁目",
     current_url="https://sites.google.com/view/famille22025",
     news_own=[
+        ("2026-11-02", "🧹 11月29日（日）午前10時から豊玉北四丁目の地域内清掃があります（くわしくは「近所の催し」のページへ）"),
         ("2026-10-13", "🌳 10月13日（火）・14日（水）に植木の剪定作業があります"
                        '<span style="display:block;font-weight:400;margin-top:6px;line-height:1.7">'
                        "10月13日（火）・14日（水）の2日間、敷地内の植木の剪定を行います。<br>"
@@ -763,7 +769,7 @@ def build(b):
         pages.append(dict(id="cardkey", file="cardkey.html", nav="カードキーについて", title="カードキーについて",
                           icon="🔑", img="cardkey.webp", alt="カードキーをかざして解錠する様子", body=CARDKEY))
     pages.append(dict(id="kinjo", file="kinjo.html", nav="近所の催し", title="近所の催し",
-                      icon="🏮", img=None, alt="", body=kinjo_body()))
+                      icon="🏮", img=None, alt="", body=kinjo_body(b["dir"])))
     pages.append(dict(id="kinkyu", file="kinkyu.html", nav="夜間・休日緊急連絡先について",
                       title="夜間・休日緊急連絡先について",
                       icon="🚨", img="kinkyu.webp", alt="夜間に電話で連絡している様子", body=KINKYU))
