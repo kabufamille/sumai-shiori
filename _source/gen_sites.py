@@ -9,6 +9,7 @@
   ラヴィール豊玉 … 共用部分に「ペットに関するご協力のお願い」
 """
 import io, os, json, re, hashlib
+from html import escape as _esc  # 近所の催しの中身をエスケープ（11/25）
 
 ROOT = r"C:/dev/sumai-shiori"
 KANRI_NAME, KANRI_TEL, KANRI_HREF = "邑ハウジング株式会社", "03-3948-0101", "0339480101"
@@ -76,9 +77,10 @@ def kinjo_body(bdir):
         when = ymd(e["start"]) + ("〜" + ymd(end) if end != e["start"] else "")
         if e.get("time"):
             when += "　" + e["time"]
-        sub = "・".join(x for x in (e.get("place"), e.get("note")) if x)
-        title = ('<a href="%s" target="_blank" rel="noopener">%s</a>' % (e["url"], e["title"])
-                 if e.get("url") else e["title"])  # 掲示物だけの催しはリンクなし
+        when = _esc(when)
+        sub = _esc("・".join(x for x in (e.get("place"), e.get("note")) if x))
+        title = ('<a href="%s" target="_blank" rel="noopener">%s</a>' % (_esc(e["url"]), _esc(e["title"]))
+                 if e.get("url") else _esc(e["title"]))  # 掲示物だけの催しはリンクなし
         li.append('    <li data-end="%s"><span class="kj-when">%s</span>'
                   '<span class="kj-title">%s %s</span>%s</li>'
                   % (end, when, KINJO_ICON.get(e.get("kind"), "📌"), title,

@@ -1,6 +1,6 @@
 {
   "_説明": "近所の催し（3棟共通）。月1回Claudeがその月の分（1か月分だけ）の候補を探し、けんじが選んだものだけここに入れて（けんじ 10/21「一度私が選定してから入れましょう」） gen_sites.py を流す。start/end は YYYY-MM-DD（1日だけなら end は省略）。終わった催しはページを開いた時に自動で隠れる（消さなくてよい）。日時・場所は出典ページで確かめたものだけ書く。only＝載せる棟を絞る時だけ書く（例 [\"famille2\",\"famille3\"]・無ければ3棟とも）。url は掲示物だけの催しなら空でよい。kind＝matsuri（祭り・フェスタ）／bousai（防災）／sumai（住まい・建物）／sonota",
-  "checked": "2026-11-02",
+  "checked": "2026-11-25",
   "events": [
     {
       "start": "2026-10-24",
@@ -88,6 +88,108 @@
       "place": "豊玉南小学校（豊玉南2-14-1）",
       "note": "高齢者体験、餅つき、ゲームコーナー、昔遊びなど。雨天時は規模を縮小して実施",
       "url": "https://www.city.nerima.tokyo.jp/kankomoyoshi/annai/omatsuri/chikusai/20260616103208700.html"
+    },
+    {
+      "start": "2026-12-05",
+      "kind": "matsuri",
+      "title": "第一地区祭（豊玉小学校）",
+      "time": "12:00〜15:00",
+      "place": "豊玉小学校（豊玉中4-2-20）",
+      "note": "焼きそば、フランクフルト、スーパーボールすくいなど。雨でも行います",
+      "url": "https://www.city.nerima.tokyo.jp/kankomoyoshi/annai/omatsuri/chikusai/20260616103208700.html"
+    },
+    {
+      "start": "2026-12-06",
+      "kind": "matsuri",
+      "title": "とよにバルーンフェスタ2026",
+      "time": "10:00〜13:00",
+      "place": "豊玉第二小学校（豊玉上2-16-1・桜台駅南口から徒歩約2分）",
+      "note": "熱気球に乗るのは有料で整理券が要ります（受付は9:30から・先着200名）。ほかの催しは無料",
+      "url": "https://www.nerimakanko.jp/event/detail.php?event_id=e000003040"
+    },
+    {
+      "start": "2026-12-01",
+      "end": "2026-12-02",
+      "kind": "matsuri",
+      "title": "マルシェ de 延伸大江戸線2026",
+      "time": "10:00〜14:00",
+      "place": "練馬区役所 本庁舎1階アトリウム",
+      "note": "野菜・お花・お菓子・パンなどの販売と、大江戸線延伸のパネル展示。入場無料",
+      "url": "https://www.nerimakanko.jp/event/detail.php?event_id=e000003018"
+    },
+    {
+      "start": "2026-12-06",
+      "kind": "sumai",
+      "title": "市民の手で気候変動プロジェクトをつくろう！",
+      "time": "14:00〜17:00",
+      "place": "練馬区役所 本庁舎19階 1902会議室",
+      "note": "テーマは「賃貸住宅の断熱化」。無料・申し込みが要ります（リンク先のフォームから）",
+      "url": "https://www.nerimakanko.jp/event/detail.php?event_id=e000003041"
+    },
+    {
+      "start": "2026-12-22",
+      "kind": "sonota",
+      "title": "ゆず湯",
+      "time": "",
+      "place": "区内の銭湯（公衆浴場）",
+      "note": "この日は入浴料が割引になります（大人550円→430円）。営業時間は銭湯ごとに違います",
+      "url": "https://www.nerimakanko.jp/event/detail.php?event_id=e000003042"
+    },
+    {
+      "start": "2026-12-16",
+      "kind": "sonota",
+      "title": "アトリウムミニステージ（30分のミニコンサート）",
+      "time": "12:15〜12:45",
+      "place": "練馬区役所 本庁舎1階アトリウム",
+      "note": "ソプラノとピアノ。無料・申し込み不要",
+      "url": "https://www.nerimakanko.jp/event/detail.php?event_id=e000003038"
+    },
+    {
+      "start": "2026-12-13",
+      "kind": "matsuri",
+      "title": "chicoowa marché Xmas 2026（手づくり品のマルシェ）",
+      "time": "10:00〜16:30",
+      "place": "ココネリ3階 産業イベントコーナー（練馬1-17-1）",
+      "note": "ハンドメイド作品の販売と手づくり体験。入場無料",
+      "url": "https://www.nerimakanko.jp/event/detail.php?event_id=e000002893"
+    },
+    {
+      "start": "2026-12-15",
+      "end": "2026-12-18",
+      "kind": "sonota",
+      "title": "ねりいち in ココネリ",
+      "time": "15日・17日・18日の3日間　各日11:00〜14:00",
+      "place": "ココネリ2階 エスカレーター脇",
+      "note": "区内の障害者施設で作った焼き菓子や雑貨の販売。16日はお休みです",
+      "url": "https://www.nerimakanko.jp/event/detail.php?event_id=e000003009"
+    },
+    {
+      "start": "2026-12-17",
+      "kind": "sonota",
+      "title": "お笑いライブ",
+      "time": "19:00開始（18:50開場）",
+      "place": "桜台地区区民館",
+      "note": "料金100円",
+      "url": "https://nerima.goguynet.jp/2026/11/23/owarai-25/"
+    },
+    {
+      "start": "2026-12-12",
+      "kind": "sonota",
+      "title": "ユニバーサルデザイン講座（基礎編）",
+      "time": "13:00〜15:50",
+      "place": "練馬区役所 地下多目的会議室",
+      "note": "だれもが使いやすいお店づくりを学ぶ講座。無料・申し込みは12月7日まで（電話かホームページ）",
+      "url": "https://www.nerimakanko.jp/event/detail.php?event_id=e000003031"
+    },
+    {
+      "start": "2026-11-26",
+      "end": "2026-12-10",
+      "kind": "sonota",
+      "title": "小さな展示会",
+      "time": "9:00〜17:00（最終日は15:00まで）",
+      "place": "豊玉北地区区民館 1階",
+      "note": "地域の方の写真・絵・手芸などの作品展示",
+      "url": "https://www.city.nerima.tokyo.jp/kankomoyoshi/event/chikukan/moyooshi/toyotamakita.html"
     }
   ]
 }
