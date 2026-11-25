@@ -4,26 +4,21 @@
 
 ## 状態
 
-| 建物 | 公開URL（**QRの貼り先**） | ページ数 | 現行のGoogleサイト（**運用中・触らない**） |
-|---|---|---|---|
-| ホームファミーユ豊玉Ⅲ | https://kabufamille.github.io/sumai-shiori/famille3/ | ホーム＋5 | https://sites.google.com/view/famille32025 |
-| ホームファミーユ豊玉Ⅱ | https://kabufamille.github.io/sumai-shiori/famille2/ | ホーム＋4 | https://sites.google.com/view/famille22025 |
-| ラヴィール豊玉 | https://kabufamille.github.io/sumai-shiori/laville/ | ホーム＋4 | https://sites.google.com/view/laville2025 |
+| 建物 | 公開URL（**QRの貼り先**） | ページ数 |
+|---|---|---|
+| ホームファミーユ豊玉Ⅲ | https://kabufamille.github.io/sumai-shiori/famille3/ | ホーム＋5 |
+| ホームファミーユ豊玉Ⅱ | https://kabufamille.github.io/sumai-shiori/famille2/ | ホーム＋4 |
+| ラヴィール豊玉 | https://kabufamille.github.io/sumai-shiori/laville/ | ホーム＋4 |
 
 2026-09-07 に現行サイトから中身を引き写して作成し、同日公開。
 
-**入口ページ（`/sumai-shiori/`）から各棟へは進めない。** けんじ方針＝「棟ごとのQRからアクセスした時だけ、その棟が開く」。各棟のURLを直接開くか、QRを使う。
+**入口ページ（`/sumai-shiori/`）から各棟へは進めない。** 方針＝「棟ごとのQRからアクセスした時だけ、その棟が開く」。各棟のURLを直接開くか、QRを使う。
 
-**QR画像**：`デスクトップ/住まいのしおりQR_新URL/`（棟ごとに素のPNGと名前つきPNG。誤り訂正レベルH・980px）。**中身は実際にデコードして一致を確認済み。**
-
-**掲示物**：`poster/` に3棟ぶんのA4 PDF。`G:\マイドライブ\住まいのしおり\住まいのしおり（縦）\` にある**現行の掲示物のQRだけを新URLに差し替えたもの**（レイアウト・写真・文言は一切変えていない）。元のPDFはそのまま残してある＝**旧QRは現行Googleサイトを指しており、そちらもまだ現役だから。**
-
-- QRの訂正レベルは**元と同じM**にした（元は29×29マス・訂正M）。新URLのほうが長いので33×33マスになるが、印刷34mm角で1マス1.03mm＝元の1.17mmとほぼ同等。**1年運用できている条件を変えないための選択。**
-- 差し替えは PyMuPDF の `page.replace_image(xref, ...)`。**差し替える前に対象xrefをデコードして旧URLであることを毎回確認**し、保存後に**300dpiで描画し直してからデコード**して新URLと一致することを確かめている（＝刷った状態に近い検証）。
+**掲示物**：`poster/` に3棟ぶんのA4 PDF（建物に貼ってある掲示物と同じ物）。
 
 ### アクセス数＝GoatCounter
 
-2026-10-01 から計測を始めた。**見る場所＝ https://sumai-shiori.goatcounter.com/** （アカウントはけんじ・登録メール admin@kabu-famille.com）。Cookieを使わない方式なので同意バナーは不要。タグは `gen_sites.py` の `shell()` に1行あり、3棟の全ページに入る。棟の区別はパス（`/sumai-shiori/famille3/...` など）で見る。広告ブロッカーを入れている人の分は数えられないので、**実数より少なめに出る**。
+2026-10-01 から計測を始めた。Cookieを使わない方式なので同意バナーは不要。タグは `gen_sites.py` の `shell()` に1行あり、3棟の全ページに入る。棟の区別はパス（`/sumai-shiori/famille3/...` など）で見る。広告ブロッカーを入れている人の分は数えられないので、**実数より少なめに出る**。
 
 ### 🔴 検索避けは `noindex` だけが効いている
 
@@ -136,7 +131,7 @@ push から1〜2分で反映される（保存と公開が別だったGoogleサ�
 | 3棟に共通する本文 | `gen_sites.py` の共通定数（`KANEN` `SODAI` など） |
 | 1棟だけの本文 | `BUILDINGS` の中の、その棟の辞書 |
 | 電話番号・最終更新日 | 先頭の定数（`KANRI_TEL` `KINKYU_TEL` `UPDATED`）。1ページに複数出るが定数は1つ |
-| お知らせ | 3棟共通は `NEWS_COMMON`、1棟だけは その棟の `news_own` |
+| お知らせ | 3棟共通は `NEWS_COMMON`、1棟だけは その棟の `news_own`（期限つきは3つ目に end） |
 | 10月からのプラスチック改定 | `CHANGE_NOTICE` → `CHANGE_NOTICE_AFTER` に差し替え（1か所で3棟6か所に効く） |
 | 見た目・画面の動き | `style.css` / `effects.js`。**これだけは生成対象外**なので `famille3/` を直して他2棟にコピーする |
 
@@ -150,8 +145,3 @@ push から1〜2分で反映される（保存と公開が別だったGoogleサ�
 **⚠️ 手でHTMLを直してしまったときは、次の生成で消える。** 直したい内容は必ず `gen_sites.py` 側へ。
 
 **🔧 ローカルで確かめるときの罠**：`python -m http.server` はキャッシュ制御を返さないので、`effects.js` を直しても**ブラウザが古い版を動かし続ける**ことがある。挙動が変わらないときは、一時的に `window.SHIORI_BUILD="…"` のような印を埋めて**動いている側に名乗らせる**か、ポートを変えて立て直す。
-
-## 関連
-
-- Obsidian: `10_AI_Archives/住まいのしおり/住まいのしおり現在の進捗.md`
-- スキル: `sumai-shiori`（現行Googleサイトを手で更新する手順書）

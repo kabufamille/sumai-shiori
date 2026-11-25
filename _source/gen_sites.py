@@ -26,13 +26,14 @@ POL_LINE = "https://lin.ee/vKcp8Xd"
 #    ・見出しは「何を直したか」が一目で分かる言い方にする（例：「〜を追加しました」）。
 #    ・画面の使い勝手だけの手直しは載せない。お知らせが操作の話で埋まると、
 #      ごみの分け方の変更のような大事な報せが埋もれるため。
+#    ・期限のある告知（断水・点検・作業の予告など）は3つ目に end を書く：
+#      ("YYYY-MM-DD", "見出し", "YYYY-MM-DD")。end の翌日以降に生成すると、その行は出ない（2026-11-25）。
 NEWS_SHOW = 6
 
 NEWS_COMMON = [
     ("2026-10-21", "近所の催し（お祭り・地区祭など）のページを追加しました"),
     ("2026-10-01", "⚠️ 10月1日からプラスチックの分け方が変わりました（歯ブラシ・ハンガーなども水曜のプラスチックへ）"),
     ("2026-09-09", "ごみの種類ごとの出し方（可燃・不燃・プラスチック・古紙）を追加しました"),
-    ("2026-09-09", "⚠️ 令和8年10月1日からプラスチックの分け方が変わります"),
     ("2026-09-08", "粗大ごみの出し方と、区で収集できないものを追加しました"),
     ("2026-09-07", "ゴミの収集曜日を追加しました"),
 ]
@@ -40,9 +41,14 @@ NEWS_COMMON = [
 
 def news_html(own):
     """共通ぶんと棟ごとのぶんを日付の新しい順にまとめ、新しい NEWS_SHOW 件を返す。"""
-    rows = sorted(NEWS_COMMON + own, key=lambda r: r[0], reverse=True)[:NEWS_SHOW]
+    import datetime
+    today = datetime.date.today().isoformat()
+    # 3つ目（任意）＝ end。end を過ぎた行は生成時に除く（2つだけのタプルは今までどおり）。
+    live = [r for r in NEWS_COMMON + own if len(r) < 3 or not r[2] or r[2] >= today]
+    rows = sorted(live, key=lambda r: r[0], reverse=True)[:NEWS_SHOW]
     out = []
-    for ymd, topic in rows:
+    for r in rows:
+        ymd, topic = r[0], r[1]
         y, m, d = ymd.split("-")
         label = "%s年%s月%s日更新" % (y, int(m), int(d))
         out.append(label + ("　" + topic if topic else ""))
@@ -598,13 +604,6 @@ BUILDINGS.append(dict(
     current_url="https://sites.google.com/view/famille22025",
     news_own=[
         ("2026-11-02", "🧹 11月29日（日）午前10時から豊玉北四丁目の地域内清掃があります（くわしくは「近所の催し」のページへ）"),
-        ("2026-10-13", "🌳 10月13日（火）・14日（水）に植木の剪定作業があります"
-                       '<span style="display:block;font-weight:400;margin-top:6px;line-height:1.7">'
-                       "10月13日（火）・14日（水）の2日間、敷地内の植木の剪定を行います。<br>"
-                       "・作業時間：終日（天候により変わることがあります）<br>"
-                       "・作業中は機械の音が出ます。ご迷惑をおかけしますが、ご理解をお願いいたします。<br>"
-                       "・枝や葉が飛ぶことがありますので、植木の近くのお部屋は、窓を閉め、洗濯物を室内に入れていただくと安心です。<br>"
-                       "・作業中は植木の周りを通るとき、足元と頭上にご注意ください。</span>"),
         ("2025-10-27", ""),
         ("2025-10-23", ""),
         ("2025-10-14", ""),
@@ -672,7 +671,6 @@ BUILDINGS.append(dict(
     town="豊玉中2丁目",
     current_url="https://sites.google.com/view/laville2025",
     news_own=[
-        ("2026-10-28", "⚠️ 11月25日（水）9:30〜12:00 貯水槽清掃のため断水します"),
         ("2026-09-09", "玄関ドアの開閉についてのお願いを追加しました"),
         ("2025-10-15", ""),
         ("2025-09-26", ""),
@@ -680,18 +678,8 @@ BUILDINGS.append(dict(
         ("2025-09-12", ""),
     ],
     # 期限つきの告知（ホームのいちばん上）。end を過ぎた日から自動で隠れる＝消し忘れても古い告知は出ない。
-    alerts=[
-        dict(end="2026-11-25", html="""
-    <p class="nt">🚰 貯水槽清掃・断水のお知らせ</p>
-    <p><strong>2026年11月25日（水）9:30〜12:00</strong> は貯水槽清掃のため<strong>断水</strong>します。<br>作業の状況により、断水時間が前後する場合があります。</p>
-    <p>・飲み水やトイレ用の水は、前もって汲み置きをお願いします。<br>
-    ・トイレタンクの水は空にしないでください（通水後の錆詰まりの原因になります）。<br>
-    ・断水中は蛇口などの水栓を<strong>必ず閉めて</strong>おいてください（開けたままだと通水時に水があふれることがあります）。<br>
-    ・作業後に最初に水を使うときは、<strong>洗面所か浴室の水栓</strong>からお使いください（トイレや台所からだと錆で目詰まりすることがあります）。<br>
-    ・濁り水が出たときは、少し流して透明になってからお使いください。</p>
-    <p class="last">お問い合わせ：邑ハウジング株式会社 管理課 <a href="tel:0339480101">03-3948-0101</a></p>
-"""),
-    ],
+    #   書き方：alerts=[dict(end="YYYY-MM-DD", html="""<p class="nt">…</p><p>…</p>""")]（済んだら次の更新で消す）
+    alerts=[],
     youbi=youbi_block([BURN, NONB, PLAS_KOSHI, BOTT], "豊玉中2丁目"),
     koshi_label="古紙（水曜）",
     gomi_first="""
@@ -888,7 +876,7 @@ def build(b):
 <a class="totop" href="#" aria-label="ページの先頭へ戻る"><span>▲</span>トップへ</a>
 <script src="search.js?v={VER}"></script>
 <script src="effects.js?v={VER}"></script>
-<script data-goatcounter="https://sumai-shiori.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script data-goatcounter="https://sumai-shiori.goatcounter.com/count" async src="//gc.zgo.at/count.v5.js" crossorigin="anonymous" integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ"></script>
 </body>
 </html>
 """.replace("{VER}", VER).replace("{DESC}", desc).replace("{TITLE}", title).replace("{FAV}", FAVICON) \
