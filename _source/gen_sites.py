@@ -14,7 +14,7 @@ from html import escape as _esc  # 近所の催しの中身をエスケープ（
 ROOT = r"C:/dev/sumai-shiori"
 KANRI_NAME, KANRI_TEL, KANRI_HREF = "邑ハウジング株式会社", "03-3948-0101", "0339480101"
 KINKYU_TEL, KINKYU_HREF = "03-5923-7250", "0359237250"
-UPDATED = "2026年11月25日"
+UPDATED = "2026年11月26日"
 # フッターの帯の下に置く pol（けんじの店）のLINE案内。2026-10-26 けんじ決定・お知らせ欄には載せない。
 POL_LINE = "https://lin.ee/vKcp8Xd"
 
@@ -537,6 +537,22 @@ PLAS_KOSHI = ("plastic", "プラスチック・古紙", "週1回", ["水"], "プ
 PLAS_ONLY = ("plastic", "プラスチック", "週1回", ["水"], "プラスチックの収集日は毎週水曜日です。")
 KOSHI_TUE = ("paper", "古紙・古布", "週1回", ["火"], "古紙と古布の収集日は毎週火曜日です。町会の資源回収のため、区の収集日とは異なります。")
 
+# 豊中通りの電線類地中化工事（各家への引込管工事）。ラヴィール・Ⅱの2棟だけ（2026-11-26 けんじ判断・Ⅲには出さない）。
+# 元は東電タウンプランニングのお知らせ1枚＝oshirase/chichuka_2026-12.pdf（直下の PDF は .gitignore で除外されるため別フォルダ）。12/8 から自動で隠れる。
+CHICHUKA_ALERT = """
+    <p class="nt">🚧 電線類の地中化工事のお知らせ（豊中通りなど）</p>
+    <p><strong>2026年12月2日（水）〜12月7日（月）9時〜18時</strong> に、練馬区豊玉中三丁目で工事があります。電線を地中に移すため、各家へ電気用の管を通す工事です。</p>
+    <p>・豊中通りは、片側交互通行で工事をします。<br>
+    ・ほかの道路は、車両通行止めか片側交互通行で工事をする場合があります。通行止めの時も、自転車と歩く人は通れます。<br>
+    ・工事にともなう停電は、原則としてありません。<br>
+    ・東電タウンプランニング株式会社や関係会社の社員を名乗る詐欺に注意してください。現場の責任者は身分証明書を持っています。<br>
+    ・工事のあとの道路の舗装（本復旧）は別の日に行います。その時はあらためて連絡があります。</p>
+    <p class="last">工事内容のお問い合わせ：株式会社関電工 新宿工務所 <a href="tel:0359168331">03-5916-8331</a>／施工業者 株式会社ダイトー <a href="tel:0333307501">03-3330-7501</a>（お問い合わせ番号 21PX3918）<br>
+    発注者：東電タウンプランニング株式会社<br>
+    <a href="../oshirase/chichuka_2026-12.pdf" target="_blank" rel="noopener">届いたお知らせ（PDF）を見る ›</a></p>
+"""
+CHICHUKA_NEWS = ("2026-11-26", "🚧 12月2日（水）〜12月7日（月）9時〜18時、豊中通りなどで電線類の地中化工事があります（くわしくはこのページのいちばん上へ）", "2026-12-07")
+
 BUILDINGS = []
 
 # ---------- ファミーユ豊玉Ⅲ ----------
@@ -606,6 +622,7 @@ BUILDINGS.append(dict(
     town="豊玉北4丁目",
     current_url="https://sites.google.com/view/famille22025",
     news_own=[
+        CHICHUKA_NEWS,
         ("2026-11-02", "🧹 11月29日（日）午前10時から豊玉北四丁目の地域内清掃があります（くわしくは「近所の催し」のページへ）", "2026-11-29"),
         ("2025-10-27", ""),
         ("2025-10-23", ""),
@@ -614,6 +631,8 @@ BUILDINGS.append(dict(
         ("2025-09-19", ""),
         ("2025-09-12", ""),
     ],
+    # 期限つきの告知（ホームのいちばん上）。書き方はラヴィールの alerts と同じ。
+    alerts=[dict(end="2026-12-07", html=CHICHUKA_ALERT)],
     youbi=youbi_block(
         [BURN, NONB, PLAS_ONLY, KOSHI_TUE, BOTT], "豊玉北4丁目",
         extra_note='<br><strong>古紙・古布は町会の資源回収のため、区の収集日（水曜）ではなく火曜日</strong>です。'),
@@ -674,6 +693,7 @@ BUILDINGS.append(dict(
     town="豊玉中2丁目",
     current_url="https://sites.google.com/view/laville2025",
     news_own=[
+        CHICHUKA_NEWS,
         ("2026-09-09", "玄関ドアの開閉についてのお願いを追加しました"),
         ("2025-10-15", ""),
         ("2025-09-26", ""),
@@ -682,7 +702,7 @@ BUILDINGS.append(dict(
     ],
     # 期限つきの告知（ホームのいちばん上）。end を過ぎた日から自動で隠れる＝消し忘れても古い告知は出ない。
     #   書き方：alerts=[dict(end="YYYY-MM-DD", html="""<p class="nt">…</p><p>…</p>""")]（済んだら次の更新で消す）
-    alerts=[],
+    alerts=[dict(end="2026-12-07", html=CHICHUKA_ALERT)],
     youbi=youbi_block([BURN, NONB, PLAS_KOSHI, BOTT], "豊玉中2丁目"),
     koshi_label="古紙（水曜）",
     gomi_first="""
